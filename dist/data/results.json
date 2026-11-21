@@ -1,0 +1,72 @@
+{
+  "random": {
+    "all": {
+      "games": 2000,
+      "win": 2000,
+      "loss": 0,
+      "draw": 0,
+      "median": 21.0,
+      "longest": 62,
+      "mean": 22.45,
+      "cleared": 1933,
+      "blocked": 67
+    },
+    "first": {
+      "games": 1000,
+      "win": 1000,
+      "loss": 0,
+      "draw": 0,
+      "median": 21.0,
+      "longest": 61,
+      "mean": 22.35,
+      "cleared": 968,
+      "blocked": 32
+    },
+    "second": {
+      "games": 1000,
+      "win": 1000,
+      "loss": 0,
+      "draw": 0,
+      "median": 22.0,
+      "longest": 62,
+      "mean": 22.55,
+      "cleared": 965,
+      "blocked": 35
+    }
+  },
+  "heuristic": {
+    "all": {
+      "games": 2000,
+      "win": 2000,
+      "loss": 0,
+      "draw": 0,
+      "median": 52.0,
+      "longest": 185,
+      "mean": 57.32,
+      "cleared": 1750,
+      "blocked": 250
+    },
+    "first": {
+      "games": 1000,
+      "win": 1000,
+      "loss": 0,
+      "draw": 0,
+      "median": 51.0,
+      "longest": 185,
+      "mean": 56.3,
+      "cleared": 885,
+      "blocked": 115
+    },
+    "second": {
+      "games": 1000,
+      "win": 1000,
+      "loss": 0,
+      "draw": 0,
+      "median": 54.0,
+      "longest": 150,
+      "mean": 58.34,
+      "cleared": 865,
+      "blocked": 135
+    }
+  }
+}

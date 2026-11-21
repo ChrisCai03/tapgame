@@ -1,0 +1,8 @@
+{
+  "training_games": 10800,
+  "validation_games": 1200,
+  "train_positions": 718664,
+  "validation_positions": 78405,
+  "validation_brier": 0.18492471438167485,
+  "epochs": 8
+}

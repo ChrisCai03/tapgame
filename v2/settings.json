@@ -1,0 +1,56 @@
+{
+  "pilots": [
+    {
+      "depth": 13,
+      "nodes": 4500,
+      "wins": 132,
+      "draws": 0,
+      "games": 160
+    },
+    {
+      "depth": 13,
+      "nodes": 18000,
+      "wins": 126,
+      "draws": 0,
+      "games": 160
+    },
+    {
+      "depth": 13,
+      "nodes": 72000,
+      "wins": 142,
+      "draws": 0,
+      "games": 160
+    },
+    {
+      "depth": 13,
+      "nodes": 180000,
+      "wins": 133,
+      "draws": 0,
+      "games": 160
+    },
+    {
+      "depth": 18,
+      "nodes": 180000,
+      "wins": 151,
+      "draws": 0,
+      "games": 160
+    },
+    {
+      "depth": 18,
+      "nodes": 500000,
+      "wins": 153,
+      "draws": 0,
+      "games": 160
+    }
+  ],
+  "selected": {
+    "depth": 18,
+    "nodes": 500000,
+    "wins": 153,
+    "draws": 0,
+    "games": 160
+  },
+  "band": 12,
+  "seat_seed": 882347,
+  "policy_seed": 45000000
+}

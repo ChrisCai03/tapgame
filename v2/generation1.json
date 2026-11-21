@@ -1,0 +1,7 @@
+{
+  "train_positions": 2261893,
+  "heldout_positions": 250180,
+  "board_features": 107,
+  "augmented_boards": 39662,
+  "heldout_brier": 0.18602611555286783
+}

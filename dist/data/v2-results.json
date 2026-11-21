@@ -1,0 +1,125 @@
+{
+  "main": {
+    "all": {
+      "games": 5000,
+      "win": 4738,
+      "loss": 262,
+      "draw": 0,
+      "median": 266.0,
+      "longest": 458,
+      "mean": 267.55,
+      "cleared": 114,
+      "blocked": 4886,
+      "unique": 5000,
+      "win_rate": 94.76
+    },
+    "first": {
+      "games": 2500,
+      "win": 2372,
+      "loss": 128,
+      "draw": 0,
+      "median": 267.0,
+      "longest": 458,
+      "mean": 268.08,
+      "cleared": 53,
+      "blocked": 2447,
+      "unique": 2500,
+      "win_rate": 94.88
+    },
+    "second": {
+      "games": 2500,
+      "win": 2366,
+      "loss": 134,
+      "draw": 0,
+      "median": 266.0,
+      "longest": 450,
+      "mean": 267.01,
+      "cleared": 61,
+      "blocked": 2439,
+      "unique": 2500,
+      "win_rate": 94.64
+    }
+  },
+  "equal": {
+    "all": {
+      "games": 500,
+      "win": 238,
+      "loss": 262,
+      "draw": 0,
+      "median": 279.5,
+      "longest": 424,
+      "mean": 277.02,
+      "cleared": 111,
+      "blocked": 389,
+      "unique": 495,
+      "win_rate": 47.6
+    },
+    "first": {
+      "games": 250,
+      "win": 119,
+      "loss": 131,
+      "draw": 0,
+      "median": 282.0,
+      "longest": 424,
+      "mean": 277.62,
+      "cleared": 60,
+      "blocked": 190,
+      "unique": 247,
+      "win_rate": 47.6
+    },
+    "second": {
+      "games": 250,
+      "win": 119,
+      "loss": 131,
+      "draw": 0,
+      "median": 276.0,
+      "longest": 415,
+      "mean": 276.43,
+      "cleared": 51,
+      "blocked": 199,
+      "unique": 248,
+      "win_rate": 47.6
+    }
+  },
+  "nodes": {
+    "all": {
+      "games": 500,
+      "win": 404,
+      "loss": 96,
+      "draw": 0,
+      "median": 274.0,
+      "longest": 411,
+      "mean": 275.5,
+      "cleared": 40,
+      "blocked": 460,
+      "unique": 498,
+      "win_rate": 80.8
+    },
+    "first": {
+      "games": 250,
+      "win": 201,
+      "loss": 49,
+      "draw": 0,
+      "median": 272.0,
+      "longest": 411,
+      "mean": 274.44,
+      "cleared": 20,
+      "blocked": 230,
+      "unique": 249,
+      "win_rate": 80.4
+    },
+    "second": {
+      "games": 250,
+      "win": 203,
+      "loss": 47,
+      "draw": 0,
+      "median": 277.5,
+      "longest": 404,
+      "mean": 276.56,
+      "cleared": 20,
+      "blocked": 230,
+      "unique": 249,
+      "win_rate": 81.2
+    }
+  }
+}

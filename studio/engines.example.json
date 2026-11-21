@@ -1,0 +1,29 @@
+[
+  {
+    "id": "native-v2",
+    "name": "Native C++ v2",
+    "argv": [
+      "node",
+      "studio/native.mjs",
+      "./engine2"
+    ]
+  },
+  {
+    "id": "v1-process",
+    "name": "V1 over stdio",
+    "argv": [
+      "node",
+      "studio/engine.mjs",
+      "--engine",
+      "v1"
+    ]
+  },
+  {
+    "id": "python-first",
+    "name": "First legal \u00b7 Python example",
+    "argv": [
+      "python3",
+      "studio/example_bot.py"
+    ]
+  }
+]

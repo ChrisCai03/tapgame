@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#102b30">
+    <title>Tapgame Studio · Analysis workbench</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="studio.css">
+    <script type="module" src="app.mjs">
+    </script>
+  </head>
+  <body>
+    <header class="mast">
+      <div class="shell mastInner"><a class="brand" href="index.html" aria-label="Tapgame Studio home"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>Tapgame <b>Studio</b></a>
+        <nav aria-label="Workbench navigation">
+          <button id="navWork" class="navCurrent">Workbench</button>
+          <button data-open="archive">Game archive</button>
+          <button data-open="guide">Guide</button>
+        </nav>
+        <button class="mobileArchive" data-open="archive">Archive</button>
+        <button class="primary newButton" data-open="new"><span aria-hidden="true">＋</span> New study</button>
+      </div>
+    </header>
+    <main class="shell">
+      <div class="pageHead">
+        <div>
+          <div class="context"><i></i><span id="context">Game review</span>
+          </div>
+          <h1>Analysis workbench</h1>
+        </div>
+        <div class="modeSwitch" aria-label="Mode">
+          <button id="reviewMode" aria-pressed="true">Review</button>
+          <button id="playMode" aria-pressed="false">Play</button>
+        </div>
+      </div>
+      <div class="layout">
+        <div class="mainCol">
+          <section class="boardCard" aria-label="Interactive game board">
+            <div class="boardTop">
+              <div class="boardTitle"><b id="boardTitle">Position</b><span id="studyType"></span><span id="quietCount"></span>
+              </div>
+              <button id="editBoard" class="onDark">Edit position</button>
+            </div>
+            <div class="surface">
+              <div id="sideB" class="side">
+              </div>
+              <div class="fieldLine"><i></i>
+              </div>
+              <div id="sideA" class="side">
+              </div>
+            </div>
+            <div class="boardFoot"><span id="boardHint" role="status">Loading the board…</span>
+              <button id="cancelTap" class="onDark" hidden>Cancel tap</button>
+            </div>
+            <div class="transport">
+              <div class="transportTop"><span class="moveCounter" id="moveCounter">Tap 0</span>
+                <div class="transportKeys">
+                  <button id="first" title="First position (Home)" aria-label="First position">⏮︎</button>
+                  <button id="prev" title="Previous tap (Left)" aria-label="Previous tap">‹</button>
+                  <button id="playback" title="Replay line" aria-label="Replay line">▶︎</button>
+                  <button id="next" title="Next tap (Right)" aria-label="Next tap">›</button>
+                  <button id="last" title="Last position (End)" aria-label="Last position">⏭︎</button>
+                </div><span id="lastTap" class="lastTap"></span>
+              </div>
+              <input id="scrub" aria-label="Game position" type="range" min="0" max="1" value="0">
+            </div>
+          </section>
+          <section id="arena" class="card" hidden>
+            <div class="sectionTitle">
+              <h2>Play from here</h2><span id="playStatus"></span>
+            </div>
+            <div class="formRow">
+              <label>Player A<select id="seatA">
+                </select>
+              </label>
+              <label>Player B<select id="seatB">
+                </select>
+              </label>
+            </div>
+            <div class="btnRow">
+              <button id="oneMove">Play one engine tap</button>
+              <button id="autoPlay" class="primary">Start play</button>
+              <button id="arenaNew">New game from opening</button>
+            </div>
+          </section>
+          <section class="card chartCard">
+            <div class="sectionTitle">
+              <div>
+                <h2>Evaluation history</h2><p id="chartCaption">Player A win estimate · Guided self-play</p>
+              </div>
+              <div class="chartTools">
+                <select id="chartMode" aria-label="Evaluation graph metric"><option value="wdl">A win %</option><option value="score">Engine score</option>
+                </select><span id="chartValue" class="valueBadge"></span>
+              </div>
+            </div>
+            <div id="chartWrap">
+              <canvas id="chart" aria-label="Player A win estimate over the active line. Use the position slider to navigate.">
+              </canvas>
+              <div class="yTicks"><span id="axisHigh">100%</span><span id="axisMid">50%</span><span id="axisLow">0%</span>
+              </div>
+            </div>
+            <div class="axisEnds"><span>Opening</span><span id="chartEnd"></span>
+            </div>
+            <details class="reviewDetail">
+              <summary>Review annotations</summary><p>Analyze each position to fill the engine-score graph and locate the first alternative and the first proven result on this line.</p>
+              <div class="btnRow">
+                <button id="scan">Scan line</button><span id="scanProgress" role="status"></span>
+              </div>
+              <div id="scanMarks" class="chips">
+              </div>
+            </details>
+          </section>
+          <section class="card recordCard">
+            <div class="sectionTitle">
+              <h2>Game record</h2>
+              <button data-open="archive">Open archive</button>
+            </div>
+            <div class="lineControls">
+              <label>Active line<select id="lineSelect">
+                </select>
+              </label>
+              <button id="returnMain">Return to main line</button>
+            </div>
+            <div class="recordStrip" id="recordStrip" aria-label="Taps near current position">
+            </div>
+            <div class="btnRow">
+              <button id="exportStudy">Export study</button>
+              <button id="importBtn">Import study</button>
+              <input id="fileInput" type="file" accept=".json,application/json" hidden>
+            </div>
+          </section>
+        </div>
+        <aside class="analysisCol" aria-label="Engine analysis">
+          <section class="card analysisCard">
+            <div class="sectionTitle">
+              <h2><span class="engineGlyph" aria-hidden="true">⌁</span> Engine analysis</h2>
+              <button id="settings" title="Analysis settings">Settings</button>
+            </div>
+            <div class="engineMeta"><span id="engineName"></span><span id="effort"></span>
+            </div>
+            <div class="outcome">
+              <div class="blockTitle">
+                <h3>Outcome estimate</h3>
+                <button data-open="guide" class="help" aria-label="How outcome estimates work">?</button>
+              </div>
+              <div class="probBar"><i id="probA"></i><i id="probD"></i><i id="probB"></i>
+              </div>
+              <div class="wdl">
+                <div><span><i class="dot a"></i>A wins</span><strong id="pctA">—</strong>
+                </div>
+                <div><span><i class="dot d"></i>Draw</span><strong id="pctD">—</strong>
+                </div>
+                <div><span><i class="dot b"></i>B wins</span><strong id="pctB">—</strong>
+                </div>
+              </div>
+              <div class="sub" id="estimateLabel">Guided self-play model</div>
+            </div>
+            <div class="rankHead">
+              <h3>Candidate taps</h3><span id="searchStatus" role="status"></span>
+            </div>
+            <div id="proof" class="proof" hidden>
+            </div>
+            <div class="tableWrap">
+              <table class="candidates">
+                <thead>
+                  <tr><th scope="col">Rank</th><th scope="col">Tap</th><th scope="col">Score</th><th scope="col">Comparison</th>
+                  </tr>
+                </thead>
+                <tbody id="rows">
+                </tbody>
+              </table>
+            </div>
+            <div class="pickRow">
+              <button id="actualPick">Ask for playing move</button><span id="actualStatus"></span>
+            </div>
+            <div class="pvBox">
+              <div class="blockTitle">
+                <h3>Continuation</h3><span id="pvEnd"></span>
+              </div>
+              <div class="pvLine" id="pv">
+              </div>
+              <div class="btnRow">
+                <button id="playCandidate">Try this tap</button>
+                <button id="followPV">Explore line</button>
+              </div>
+            </div>
+          </section>
+          <section class="card bansCard">
+            <div class="sectionTitle">
+              <h2>Repetition check</h2><span id="banCount"></span>
+            </div>
+            <div id="bans">
+            </div>
+          </section>
+          <section class="card simCard">
+            <div class="sectionTitle">
+              <h2>Simulate this position</h2>
+              <button id="simSettings">Options</button>
+            </div><p id="simSpec"></p>
+            <div class="btnRow">
+              <button id="simulate" class="primary">Run simulations</button><span id="simProgress" role="status"></span>
+            </div>
+            <div id="simResults">
+            </div>
+          </section>
+        </aside>
+      </div>
+      <footer><span>Tapgame Studio</span><a href="https://github.com/ChrisCai03/tapgame">Source code</a>
+        <button data-open="guide">Engine protocol</button>
+      </footer>
+    </main>
+    <dialog id="dialog">
+      <form method="dialog" class="dlgHead">
+        <h2 id="dlgTitle">
+        </h2>
+        <button aria-label="Close dialog" title="Close">×</button>
+      </form>
+      <div id="dlgBody">
+      </div>
+    </dialog>
+    <div id="notice" role="status" hidden>
+    </div>
+    <noscript>Enable JavaScript to use the workbench.</noscript>
+  </body>
+</html>

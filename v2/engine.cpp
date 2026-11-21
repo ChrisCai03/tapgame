@@ -9,11 +9,13 @@ array<Claim,N> nominal,certified;
 array<int,N> value2,phaseCount;
 array<unsigned char,N> history{};
 bool isSingle(int s){return live[s/H]==1 && live[s%H]==1;}
-int forced(int s,int t,int ply){
+int forced(int s,int t,int ply,int quiet=0,vector<int>* line=nullptr){
  if(s%H==0)return -MATE+ply;
+ if(quiet>=QUIET_LIMIT)return 0;
  auto m=graph[s].moves[0];int k=key(m.next,t^1);
  if(history[k])return -MATE+ply;
- history[k]=1;int value=-forced(m.next,t^1,ply+1);history[k]=0;return value;
+ if(line)line->push_back(10*m.x+m.y);
+ history[k]=1;int value=-forced(m.next,t^1,ply+1,m.drop?0:quiet+1,line);history[k]=0;return value;
 }
 // Verify a rank-decreasing strategy in the real history. An exhausted budget yields unknown.
 bool prove(int s,int t,int wanted,int& budget,int* bestMove=nullptr){
@@ -74,17 +76,21 @@ struct Search{
  int visits=0,limit=18000,depth=13,epoch=0;
  array<int,N> stamp{},hint{};
  int eval(int s)const{return value2[s]+nominal[s].sign*260;}
- int score(int s,int t,int remaining,int alpha,int beta,int ply,bool fresh,int quiet){
+ template<bool Record=false>
+ int score(int s,int t,int remaining,int alpha,int beta,int ply,bool fresh,int quiet,vector<int>* line=nullptr){
+   if constexpr(Record)line->clear();
    if(++visits>limit)return 0;
    if(s%H==0)return -MATE+ply;
    if(quiet>=QUIET_LIMIT)return 0;
-   if(isSingle(s))return forced(s,t,ply);
+   if(isSingle(s))return forced(s,t,ply,quiet,Record?line:nullptr);
    if(fresh && certified[s].sign)return certified[s].sign*(8000-ply-certified[s].rank);
    auto& g=graph[s];array<pair<int,int>,9> order;int n=0;
    for(int i=0;i<g.count;i++){
      auto m=g.moves[i];if(history[key(m.next,t^1)])continue;
-     if(m.next%H==0)return MATE-ply-1;
-     if(m.drop && certified[m.next].sign<0)return 8000-ply-1-certified[m.next].rank;
+     if(m.next%H==0 || (m.drop && certified[m.next].sign<0)){
+       if constexpr(Record)line->push_back(10*m.x+m.y);
+       return m.next%H==0?MATE-ply-1:8000-ply-1-certified[m.next].rank;
+     }
      int priority=eval(m.next)-20*m.drop;
      if(stamp[s]==epoch && hint[s]==i)priority-=2000;
      order[n++]={priority,i};
@@ -95,9 +101,13 @@ struct Search{
    int best=-2*MATE,pick=order[0].second;
    for(int j=0;j<n;j++){
      int i=order[j].second;auto m=g.moves[i];int k=key(m.next,t^1);
-     history[k]=1;int v=-score(m.next,t^1,remaining-1,-beta,-alpha,ply+1,m.drop,m.drop?0:quiet+1);history[k]=0;
+     vector<int> reply;
+     history[k]=1;int v=-score<Record>(m.next,t^1,remaining-1,-beta,-alpha,ply+1,m.drop,m.drop?0:quiet+1,Record?&reply:nullptr);history[k]=0;
      if(visits>limit)return 0;
-     if(v>best){best=v;pick=i;}
+     if(v>best){
+       best=v;pick=i;
+       if constexpr(Record){line->assign(1,10*m.x+m.y);line->insert(line->end(),reply.begin(),reply.end());}
+     }
      alpha=max(alpha,v);if(alpha>=beta)break;
    }
    stamp[s]=epoch;hint[s]=pick;return best;
@@ -126,6 +136,9 @@ struct Search{
    return completed;
  }
 };
+#include "analysis.hpp"
+
+#ifndef TAPGAME_ENGINE_LIBRARY
 int main(int argc,char**argv){
  if(argc<4)throw runtime_error("v2 MODE v1-values v2-values ...");
  initialize();ifstream old(argv[2]),updated(argv[3]);
@@ -142,7 +155,7 @@ int main(int argc,char**argv){
  if(mode=="info"){
    for(int k=2;k<=5;k++){int known=0,total=0;for(int s=0;s<N;s++)if(s/H&&s%H&&phaseCount[s]==k){total++;known+=certified[s].sign!=0;}cout<<k<<" "<<known<<" "<<total<<"\n";}return 0;
  }
- if(mode!="match" && mode!="choose")throw runtime_error("unknown mode");
+ if(mode!="match" && mode!="choose" && mode!="analyze")throw runtime_error("unknown mode");
  if(argc<6)throw runtime_error("supply node limit and early score band");
  v2.limit=stoi(argv[4]);int band=stoi(argv[5]);
  if(argc>6)v2.depth=stoi(argv[6]);
@@ -154,24 +167,38 @@ int main(int argc,char**argv){
    if(mode=="match"){if(!(in>>id>>seed>>first))throw runtime_error("invalid schedule");}
    else{in>>seed>>given;}
    int side=1-first,t=0,quiet=0,s=opening,drops=0,plies=0,winner=-1;string reason,trace;
+   bool custom=false;
+   if(mode!="match"){
+     string start;
+     if(given=="-")given.clear();
+     if(in>>start){
+       if(start.size()!=7 || (start[0]!='A' && start[0]!='B') ||
+          start.find_first_not_of("0123456789",1)!=string::npos)throw runtime_error("invalid start");
+       auto hand=[&](int j){return handId[packed({start[j]-'0',start[j+1]-'0',start[j+2]-'0'})];};
+       t=(start[0]=='B');s=key(hand(1)*H+hand(4),t);
+       if(!s)throw runtime_error("both seats cleared");
+       custom=true;
+     }
+   }
    Player p(seed);history.fill(0);
    for(;;){
      history[key(s,t)]=p.seen[key(s,t)]=1;
-     if(! (s%H)){winner=1-t;reason="cleared";break;}
+     if(!(s/H) || !(s%H)){winner=!(s/H)?t:1-t;reason="cleared";break;}
      if(quiet>=QUIET_LIMIT){reason="timeout";break;}
      auto opts=p.options(s,t);if(opts.empty()){reason="blocked";winner=1-t;break;}
      int pick=-1;
-     if(mode=="choose" && trace.size()<given.size()){
+     if(mode!="match" && trace.size()<given.size()){
        for(auto i:opts){auto m=graph[s].moves[i];if(trace.size()+1<given.size() && m.x==given[trace.size()]-'0'&&m.y==given[trace.size()+1]-'0')pick=i;}
        if(pick<0)throw runtime_error("illegal prefix");
      }else{
+       if(mode=="analyze"){printAnalysis(v2,s,t,opts,quiet);break;}
        bool newBot=mode=="choose"||t==side;
        auto& memory=cache[newBot];vector<int> choices;
-       auto found=memory.find(trace);
+       auto found=custom?memory.end():memory.find(trace);
        if(found!=memory.end())choices=found->second;
        else{
          choices=newBot?v2.candidates(s,t,opts,plies,band,quiet):vector<int>{p.engine(s,t,opts,quiet,8,4500)};
-         if(plies<32 && memory.size()<150000)memory.emplace(trace,choices);
+         if(!custom && plies<32 && memory.size()<150000)memory.emplace(trace,choices);
        }
        pick=choices.size()==1?choices.front():p.randomChoice(choices);
        if(mode=="choose"){auto m=graph[s].moves[pick];cout<<m.x<<" "<<m.y<<"\n";break;}
@@ -180,6 +207,8 @@ int main(int argc,char**argv){
      quiet=m.drop?0:quiet+1;drops+=m.drop;s=m.next;t^=1;
    }
    if(mode=="match")cout<<id<<","<<seed<<","<<first<<","<<(winner<0?"draw":winner==side?"win":"loss")<<","<<reason<<","<<plies<<","<<drops<<","<<trace<<"\n";
-   else if(!reason.empty()){if(trace.size()!=given.size())throw runtime_error("prefix continues past game end");cout<<"game over\n";}
+   else if(!reason.empty()){if(trace.size()!=given.size())throw runtime_error("prefix continues past game end");if(mode=="analyze")cout<<"{\"terminal\":{\"winner\":"<<(winner<0?"null":winner?"\"B\"":"\"A\"")<<",\"reason\":\""<<(reason=="cleared"?"clearance":reason=="blocked"?"blockade":"timeout")<<"\"},\"candidates\":[],\"recommended\":null,\"depth\":0,\"nodes\":0}\n";
+     else cout<<"game over\n";}
  }
 }
+#endif

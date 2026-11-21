@@ -196,4 +196,5 @@ int main(int argc,char**argv){
      for(auto [state,side]:training)cout<<g<<","<<state<<","<<(winner<0?0:(side==winner?1:-1))<<"\n";
    }else cout<<g+1<<","<<seed<<","<<(g%2==0)<<","<<(winner<0?"draw":(winner==g%2?"win":"loss"))<<","<<reason<<","<<plies<<","<<drops<<","<<trace<<"\n";
  }
+ return 0;
 }

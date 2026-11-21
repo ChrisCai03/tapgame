@@ -2,6 +2,20 @@
 
 Two playable C++17 bots for the three-number finger addition game. Both use iterative-deepening alpha–beta search and position values learned from self-play. The frozen tables are included, so playing requires only a C++ compiler.
 
+## Analysis workbench
+
+[Open Tapgame Studio](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html) · [Study the three-tap blockade in game 1](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?game=1&tap=268)
+
+Review the 10,000 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
+
+The GUI and independent engines communicate through TGEP/1. The same JSON messages work in a browser worker and over a process's standard input/output. To run the workbench locally with Node.js 20 or newer, use:
+
+```sh
+node studio/server.mjs
+```
+
+To add a C++, Python or other executable, use the [protocol and engine registration guide](docs/engine-protocol.md). No training or package installation is required for the built-in bots.
+
 ## Rules
 
 Each player starts with three live numbers, all 1. On your turn, choose one of your live numbers and one of your opponent's. Replace your chosen number with their sum modulo 10. Withdraw it permanently if the sum ends in zero. The opponent's number stays in place.

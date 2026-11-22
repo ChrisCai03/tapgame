@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#133a34">
+<title>Random-opening league · Tapgame Studio</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="studio.css">
+<link rel="stylesheet" href="league.css">
+<script type="module" src="league.mjs"></script>
+</head>
+<body class="league">
+<header class="mast"><div class="shell mastInner">
+<a class="brand" href="index.html"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>Tapgame <b>Studio</b></a>
+<a class="back" href="index.html">Analysis workbench ↗</a>
+</div></header>
+<main class="shell leagueMain">
+<header class="leagueHead">
+<div><p class="overline">Match report</p><h1>Random-opening league</h1>
+<p>Four bots played the same 1,000 opening draws from both seats. Each of the six pairings played 2,000 games.</p></div>
+<div class="ratingHero"><span>V2 tournament Elo</span><b id="heroElo">…</b><span id="heroRange">Random baseline = 0</span></div>
+</header>
+<p id="reportError" role="alert" hidden></p>
+<div class="leagueGrid">
+<section class="paper"><h2>Head to head</h2><p>Score for the row bot against the column bot. A timeout draw earns half a point.</p>
+<div class="scroll"><table id="matrix"><caption class="sr-only">Empirical score by bot and opponent</caption></table></div></section>
+<section class="paper"><h2>Elo ratings</h2><p>Fitted jointly to all six matchups. Intervals resample whole opening draws.</p>
+<div class="scroll"><table id="ratings"><thead><tr><th>Bot</th><th>Elo</th><th>95% interval</th></tr></thead><tbody></tbody></table></div></section></div>
+<section class="paper detailsCard"><h2>Match records</h2><p>Wins, draws and losses are from the first-listed bot’s perspective. Open a pairing to replay a game in Studio.</p>
+<div class="scroll"><table id="records"><thead><tr><th>Pairing</th><th>Wins</th><th>Draws</th><th>Losses</th><th>First-seat wins</th><th>Second-seat wins</th><th>Traces</th></tr></thead><tbody></tbody></table></div></section>
+<section class="paper detailsCard"><h2>Reading the ratings</h2><p id="direct"></p><p id="misfit"></p><p>V2 and V1 each lost twice to Random. Both lost one game on the same forced opening. Random started with three 7s against three 3s and cleared its last number on tap five. <a href="index.html?opening=51312">Play the forced line</a>.</p>
+<details><summary>Rules, policies and estimation</summary>
+<p>Each player receives a uniformly drawn sorted triple of digits 1–9. A fair draw decides the first seat. The bots swap sides on the same opening, with a new policy seed. A win requires clearing every number or leaving the opponent without a legal tap. The timeout is 10,000 two-tap rounds without a withdrawal. The referee replays every tap and checks the full board history.</p>
+<p>V2 uses its released 500,000-node, depth-18 settings. V1 uses 4,500 nodes and depth 8. Heuristic prioritizes an immediate win, then avoids allowing an immediate opponent win or withdrawal and prefers withdrawing its own number. Random samples uniformly from the legal value-pairs.</p>
+<p>The Bradley–Terry model estimates a single rating for each bot using the 400-point Elo scale. Random is fixed at zero. The 95% percentile intervals use 2,000 resamples of 1,000 opening draws. Each draw retains its two seat assignments and all six pairings.</p>
+<p><a href="https://github.com/ChrisCai03/tapgame/blob/main/docs/random-opening-league.md">Reproduce the tournament</a> · <a href="../data/league/results.json">Download result data</a></p>
+</details></section>
+</main>
+</body></html>

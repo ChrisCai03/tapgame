@@ -19,7 +19,7 @@ def heuristic_grade(move,following,t,seen):
     fatal=any(after[1-t]==(0,0,0) for after in reply.values())
     threatened=any(sum(action)==10 for action in reply)
     return 4*(not fatal)+2*(not threatened)+int(sum(move)==10)
-def verify(row,baseline):
+def verify(row,baseline,primary=None):
     start = row.get('start', 'A111111')
     assert len(start) == 7 and start[0] in 'AB' and all(c in '123456789' for c in start[1:])
     board = tuple(tuple(sorted(map(int, digits))) for digits in (start[1:4], start[4:]))
@@ -30,7 +30,7 @@ def verify(row,baseline):
     for i in range(0,len(tr),2):
         assert quiet<20000
         legal=options(board,t,seen);action=tuple(map(int,tr[i:i+2]));n=legal[action]
-        if baseline=='heuristic' and t!=bot:
+        if (primary if t==bot else baseline)=='heuristic':
             assert heuristic_grade(action,n,t,seen)==max(heuristic_grade(k,v,t,seen) for k,v in legal.items())
         quiet=0 if sum(action)==10 else quiet+1;drops+=sum(action)==10
         t=1-t;board=n;seen.add(board)
@@ -53,14 +53,14 @@ def main():
         summary[b]={k:aggregate([r for r in rows if seat is None or int(r['bot_first'])==seat]) for k,seat in [('all',None),('first',1),('second',0)]}
     (data/'results.json').write_text(json.dumps(summary,indent=2))
     print(json.dumps(summary))
-def verify_openings(path):
+def verify_openings(path, primary=None, opponent=None):
     from itertools import combinations_with_replacement
     triples = list(combinations_with_replacement('123456789', 3))
     with path.open() as f:
         rows = list(csv.DictReader(f))
     pairs = {}
     for row in rows:
-        verify(row, 'v1')
+        verify(row, opponent, primary)
         opening_id = int(row['opening_id'])
         assert 0 <= opening_id < 2 * len(triples)**2
         a, b = divmod(opening_id // 2, len(triples))

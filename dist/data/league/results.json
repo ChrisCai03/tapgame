@@ -1,0 +1,274 @@
+{
+  "opening_seed": 774023,
+  "seat_seed": 808109,
+  "policy_seed": 86000000,
+  "bootstrap_seed": 381437,
+  "replicates": 2000,
+  "draws": 1000,
+  "distinct_named_starts": 990,
+  "games": 12000,
+  "ratings": {
+    "v2": {
+      "elo": 1567.78,
+      "low": 1482.24,
+      "high": 1662.83
+    },
+    "v1": {
+      "elo": 1240.72,
+      "low": 1166.4,
+      "high": 1326.52
+    },
+    "heuristic": {
+      "elo": 575.73,
+      "low": 536.65,
+      "high": 624.45
+    },
+    "random": {
+      "elo": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    }
+  },
+  "matches": [
+    {
+      "first": "v2",
+      "second": "v1",
+      "all": {
+        "games": 2000,
+        "win": 1758,
+        "loss": 242,
+        "draw": 0,
+        "median": 251.0,
+        "longest": 797,
+        "mean": 238.48,
+        "cleared": 201,
+        "blocked": 1799
+      },
+      "firstSeat": {
+        "games": 1000,
+        "win": 962,
+        "loss": 38,
+        "draw": 0,
+        "median": 207.0,
+        "longest": 581,
+        "mean": 189.47,
+        "cleared": 36,
+        "blocked": 964
+      },
+      "secondSeat": {
+        "games": 1000,
+        "win": 796,
+        "loss": 204,
+        "draw": 0,
+        "median": 276.0,
+        "longest": 797,
+        "mean": 287.48,
+        "cleared": 165,
+        "blocked": 835
+      },
+      "score": 0.879,
+      "direct_elo": 344.4814019029287,
+      "fitted_score": 0.8679198035159428
+    },
+    {
+      "first": "v2",
+      "second": "heuristic",
+      "all": {
+        "games": 2000,
+        "win": 1973,
+        "loss": 27,
+        "draw": 0,
+        "median": 49.0,
+        "longest": 206,
+        "mean": 56.58,
+        "cleared": 1560,
+        "blocked": 440
+      },
+      "firstSeat": {
+        "games": 1000,
+        "win": 999,
+        "loss": 1,
+        "draw": 0,
+        "median": 37.0,
+        "longest": 203,
+        "mean": 45.9,
+        "cleared": 772,
+        "blocked": 228
+      },
+      "secondSeat": {
+        "games": 1000,
+        "win": 974,
+        "loss": 26,
+        "draw": 0,
+        "median": 62.0,
+        "longest": 206,
+        "mean": 67.27,
+        "cleared": 788,
+        "blocked": 212
+      },
+      "score": 0.9865,
+      "direct_elo": 745.5053284372822,
+      "fitted_score": 0.996700563957875
+    },
+    {
+      "first": "v2",
+      "second": "random",
+      "all": {
+        "games": 2000,
+        "win": 1998,
+        "loss": 2,
+        "draw": 0,
+        "median": 15.0,
+        "longest": 54,
+        "mean": 16.43,
+        "cleared": 1892,
+        "blocked": 108
+      },
+      "firstSeat": {
+        "games": 1000,
+        "win": 1000,
+        "loss": 0,
+        "draw": 0,
+        "median": 13.0,
+        "longest": 47,
+        "mean": 15.63,
+        "cleared": 942,
+        "blocked": 58
+      },
+      "secondSeat": {
+        "games": 1000,
+        "win": 998,
+        "loss": 2,
+        "draw": 0,
+        "median": 16.0,
+        "longest": 54,
+        "mean": 17.24,
+        "cleared": 950,
+        "blocked": 50
+      },
+      "score": 0.999,
+      "direct_elo": 1199.826195290393,
+      "fitted_score": 0.9998796325261821
+    },
+    {
+      "first": "v1",
+      "second": "heuristic",
+      "all": {
+        "games": 2000,
+        "win": 1980,
+        "loss": 20,
+        "draw": 0,
+        "median": 41.0,
+        "longest": 244,
+        "mean": 47.8,
+        "cleared": 1705,
+        "blocked": 295
+      },
+      "firstSeat": {
+        "games": 1000,
+        "win": 1000,
+        "loss": 0,
+        "draw": 0,
+        "median": 33.0,
+        "longest": 153,
+        "mean": 38.9,
+        "cleared": 845,
+        "blocked": 155
+      },
+      "secondSeat": {
+        "games": 1000,
+        "win": 980,
+        "loss": 20,
+        "draw": 0,
+        "median": 50.0,
+        "longest": 244,
+        "mean": 56.7,
+        "cleared": 860,
+        "blocked": 140
+      },
+      "score": 0.99,
+      "direct_elo": 798.2540778390198,
+      "fitted_score": 0.978710227124275
+    },
+    {
+      "first": "v1",
+      "second": "random",
+      "all": {
+        "games": 2000,
+        "win": 1998,
+        "loss": 2,
+        "draw": 0,
+        "median": 14.0,
+        "longest": 56,
+        "mean": 15.38,
+        "cleared": 1911,
+        "blocked": 89
+      },
+      "firstSeat": {
+        "games": 1000,
+        "win": 1000,
+        "loss": 0,
+        "draw": 0,
+        "median": 13.0,
+        "longest": 45,
+        "mean": 14.83,
+        "cleared": 964,
+        "blocked": 36
+      },
+      "secondSeat": {
+        "games": 1000,
+        "win": 998,
+        "loss": 2,
+        "draw": 0,
+        "median": 14.0,
+        "longest": 56,
+        "mean": 15.93,
+        "cleared": 947,
+        "blocked": 53
+      },
+      "score": 0.999,
+      "direct_elo": 1199.826195290393,
+      "fitted_score": 0.9992095763916681
+    },
+    {
+      "first": "heuristic",
+      "second": "random",
+      "all": {
+        "games": 2000,
+        "win": 1932,
+        "loss": 68,
+        "draw": 0,
+        "median": 21.0,
+        "longest": 99,
+        "mean": 23.81,
+        "cleared": 1944,
+        "blocked": 56
+      },
+      "firstSeat": {
+        "games": 1000,
+        "win": 970,
+        "loss": 30,
+        "draw": 0,
+        "median": 21.0,
+        "longest": 99,
+        "mean": 23.31,
+        "cleared": 975,
+        "blocked": 25
+      },
+      "secondSeat": {
+        "games": 1000,
+        "win": 962,
+        "loss": 38,
+        "draw": 0,
+        "median": 22.0,
+        "longest": 80,
+        "mean": 24.31,
+        "cleared": 969,
+        "blocked": 31
+      },
+      "score": 0.966,
+      "direct_elo": 581.3992837492951,
+      "fitted_score": 0.9649107910821498
+    }
+  ]
+}

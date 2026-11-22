@@ -1,0 +1,32 @@
+.league .shell{width:min(1150px,calc(100% - 48px))}
+.league .mastInner{justify-content:space-between;gap:12px}
+.back{font-size:.87rem;text-decoration:none;font-weight:650}
+.leagueMain{padding:26px 0 44px}
+.leagueHead{background:#123e37;color:white;border-radius:15px;padding:clamp(24px,4vw,50px);display:flex;align-items:center;justify-content:space-between;gap:30px}
+.leagueHead h1{color:white;margin:0;font-size:clamp(2.25rem,4.6vw,3.9rem);line-height:1.04;letter-spacing:-.055em}
+.leagueHead p{max-width:51ch;color:#d5e8df;margin:15px 0 0}
+.leagueHead .overline{margin:0 0 15px;color:#a3d9be;text-transform:uppercase;letter-spacing:.15em;font-size:.73rem;font-weight:650}
+.ratingHero{display:grid;min-width:195px;border-left:1px solid #578174;padding-left:26px;gap:3px}
+.ratingHero b{font:650 clamp(2.45rem,4vw,3.4rem)/1.12 var(--font);color:#ffd092;letter-spacing:-.04em}
+.ratingHero span{font-size:.84rem;color:#d9e7de}
+.leagueGrid{display:grid;grid-template-columns:1.28fr 1fr;gap:16px;margin-top:16px}
+.paper{background:white;border:1px solid var(--line);border-radius:12px;padding:clamp(16px,2.4vw,28px);min-width:0}
+.paper h2{margin:0;font-size:1.28rem;letter-spacing:-.025em}
+.paper p{color:var(--muted);margin:.5rem 0 1.05rem}
+.paper .scroll{overflow-x:auto}
+.paper table{width:100%;border-collapse:collapse;font-size:.91rem}
+.paper th,.paper td{padding:.63rem .55rem;text-align:right;border-bottom:1px solid #e2e9e6;white-space:nowrap;font-variant-numeric:tabular-nums}
+.paper th:first-child,.paper td:first-child{text-align:left}
+.paper thead th{color:#48635e;font-size:.8rem}
+.paper tbody th{font-weight:650}
+#matrix td{font-family:var(--mono);font-size:.87rem}
+#matrix .high{background:#e5f3eb;color:#164835}
+#matrix .low{background:#f8f0e8;color:#67472b}
+#matrix .diag{color:#8a9994}
+.detailsCard{margin-top:16px}
+.detailsCard p{max-width:92ch}
+.detailsCard summary{cursor:pointer;font-weight:650;color:var(--accent)}
+.detailsCard details{border-top:1px solid var(--line);padding-top:12px}
+.sr-only{position:absolute;clip:rect(0,0,0,0);width:1px;height:1px;overflow:hidden}
+@media(max-width:790px){.leagueGrid{grid-template-columns:1fr}.paper table{font-size:.86rem}.league .shell{width:calc(100% - 28px)}}
+@media(max-width:600px){.leagueHead{display:block}.ratingHero{margin-top:20px;border-left:0;padding:14px 0 0;border-top:1px solid #578174}.league .brand{font-size:1.05rem}.back{font-size:.76rem}.leagueMain{padding-top:14px}.paper th,.paper td{padding:.55rem .38rem}}

@@ -4,7 +4,11 @@ import {OPEN} from './rules.mjs';
 import {engines} from './client.mjs';
 import {simNames} from './policy.mjs';
 
+const leagueBots = {v2:'V2', v1:'V1', heuristic:'Heuristic', random:'Random'};
+const leaguePairs = Object.keys(leagueBots).flatMap((left, index, bots) => bots.slice(index+1).map(right => [left,right]));
 export const sets = {
+  ...Object.fromEntries(leaguePairs.map(([left,right]) =>
+    ['league/'+left+'-'+right, [leagueBots[left]+' vs '+leagueBots[right]+' · Round robin', 2000]])),
   'v2-v1':['V2 vs V1 · Released settings', 5000],
   'random-openings-v2-v1':['V2 vs V1 · Random openings', 1000], 'v2-equal':['V2 vs V1 · Equal depth and nodes', 500],
   'v2-equal-nodes':['V2 vs V1 · Equal nodes', 500], random:['V1 vs random', 2000], heuristic:['V1 vs heuristic', 2000]
@@ -24,12 +28,14 @@ export async function loadGame(suite, id, ply = 0) {
       }));
   const rows = await dataCache.get(suite), row = rows[id]?.split(',');
   if (!row || Number(row[0]) !== id || row[7]?.length !== Number(row[5])*2)throw Error('Invalid archive record.');
-  const randomStart = suite === 'random-openings-v2-v1';
+  const league = suite.startsWith('league/');
+  const randomStart = league || suite === 'random-openings-v2-v1';
   const start = randomStart ? openingFromId(Number(row[10])) : OPEN;
   if (randomStart && row[8] !== start.turn+start.a.join('')+start.b.join('')) throw Error('Opening number and recorded board disagree.');
   const suffix = randomStart ? ' · opening #'+row[10] : suite === 'v2-equal' ? ' (depth control)' : suite === 'v2-equal-nodes' ? ' (node control)' : '';
   const study = createStudy(sets[suite][0].split(' · ')[0]+' / Game '+String(id).padStart(4, '0')+suffix, start, row[7], ply);
-  const pair = suite.startsWith('v2-') || randomStart ? ['Tapgame v2', 'Tapgame v1'] : ['Tapgame v1', suite === 'random' ? 'Uniform random' : 'Heuristic'];
+  const pair = league ? suite.slice(7).split('-').map(bot => leagueBots[bot]) :
+    suite.startsWith('v2-') || randomStart ? ['Tapgame v2', 'Tapgame v1'] : ['Tapgame v1', suite === 'random' ? 'Uniform random' : 'Heuristic'];
   if ((row[2] === '0') !== (start.turn === 'B')) pair.reverse();
   study.players = {A:pair[0], B:pair[1]};
   return study;

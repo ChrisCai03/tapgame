@@ -147,6 +147,15 @@ int main(int argc,char**argv){
  string mode=argv[1];
  const bool matchStart=mode=="match-start";
  if(matchStart)mode="match";
+ string matchBots[2]={"v2","v1"};
+ if(matchStart && argc>7){
+   if(argc!=9)throw runtime_error("supply two policies: v2, v1, heuristic or random");
+   for(int i=0;i<2;i++){
+     matchBots[i]=argv[7+i];
+     if(matchBots[i]!="v2" && matchBots[i]!="v1" && matchBots[i]!="heuristic" && matchBots[i]!="random")
+       throw runtime_error("unknown match policy");
+   }
+ }
  if(mode=="small-table"){
    for(int s=0;s<N;s++)if(s/H && s%H && phaseCount[s]<=3){
      for(int a:{s/H,s%H}){for(int x:hands[a])cout<<x;cout<<",";}
@@ -198,15 +207,20 @@ int main(int argc,char**argv){
        if(pick<0)throw runtime_error("illegal prefix");
      }else{
        if(mode=="analyze"){printAnalysis(v2,s,t,opts,quiet);break;}
-       bool newBot=mode=="choose"||t==side;
-       auto& memory=cache[newBot];vector<int> choices;
-       auto found=custom?memory.end():memory.find(trace);
-       if(found!=memory.end())choices=found->second;
+       const string& policy=matchBots[t==side || mode=="choose" ? 0 : 1];
+       if(policy=="random")pick=p.randomChoice(opts);
+       else if(policy=="heuristic")pick=p.heuristic(s,t,opts);
        else{
-         choices=newBot?v2.candidates(s,t,opts,plies,band,quiet):vector<int>{p.engine(s,t,opts,quiet,8,4500)};
-         if(!custom && plies<32 && memory.size()<150000)memory.emplace(trace,choices);
+         bool newBot=policy=="v2";
+         auto& memory=cache[newBot];vector<int> choices;
+         auto found=custom?memory.end():memory.find(trace);
+         if(found!=memory.end())choices=found->second;
+         else{
+           choices=newBot?v2.candidates(s,t,opts,plies,band,quiet):vector<int>{p.engine(s,t,opts,quiet,8,4500)};
+           if(!custom && plies<32 && memory.size()<150000)memory.emplace(trace,choices);
+         }
+         pick=choices.size()==1?choices.front():p.randomChoice(choices);
        }
-       pick=choices.size()==1?choices.front():p.randomChoice(choices);
        if(mode=="choose"){auto m=graph[s].moves[pick];cout<<m.x<<" "<<m.y<<"\n";break;}
      }
      auto m=graph[s].moves[pick];trace+=char('0'+m.x);trace+=char('0'+m.y);plies++;

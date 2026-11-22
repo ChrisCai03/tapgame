@@ -6,7 +6,7 @@ Two playable C++17 bots for the three-number finger addition game. Both use iter
 
 [Open Tapgame Studio](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html) · [Study the three-tap blockade in game 1](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?game=1&tap=268)
 
-Review the 11,000 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
+Review the 23,000 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
 
 Draw a random opening in Play or New study. The opening number lets you share the same hands and starting player. At tap zero, Studio shows any known forced win and its winning first tap when the mover can force the result. [Draw an opening](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?opening=random) · [Proven openings and random-start benchmark](docs/random-openings.md)
 
@@ -51,6 +51,8 @@ V1 searches up to eight taps with a budget of 4,500 main nodes per decision. V2 
 | V2 vs. v1, both limited to 4,500 nodes, v2 depth 18 | 500 | 404 | 0 | 96 |
 
 Wins are from the first-listed bot's perspective. Each v2 match randomized starting player with balanced seats. The 94.76% result uses each version's released search budget. Forced lines and proof checks are outside the main-node count.
+
+[Four-bot random-opening league and Elo ratings](https://tapgame-match-report.chris-cai.chatgpt.site/studio/league.html) · [Round-robin methods and reproduction](docs/random-opening-league.md)
 
 [Version 1 training and baselines](docs/v1.md) · [Version 2 training, search and reproduction commands](v2/README.md) · [Game-by-game traces and summaries](dist/data/)
 

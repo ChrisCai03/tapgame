@@ -20,7 +20,12 @@ def heuristic_grade(move,following,t,seen):
     threatened=any(sum(action)==10 for action in reply)
     return 4*(not fatal)+2*(not threatened)+int(sum(move)==10)
 def verify(row,baseline):
-    t=0;board=((1,1,1),(1,1,1));seen={board};quiet=0;drops=0;bot=int(not int(row['bot_first']))
+    start = row.get('start', 'A111111')
+    assert len(start) == 7 and start[0] in 'AB' and all(c in '123456789' for c in start[1:])
+    board = tuple(tuple(sorted(map(int, digits))) for digits in (start[1:4], start[4:]))
+    t = int(start[0] == 'B')
+    bot = t if int(row['bot_first']) else 1-t
+    seen={board};quiet=0;drops=0
     tr=row['trace'];assert len(tr)==2*int(row['taps'])
     for i in range(0,len(tr),2):
         assert quiet<20000
@@ -48,4 +53,32 @@ def main():
         summary[b]={k:aggregate([r for r in rows if seat is None or int(r['bot_first'])==seat]) for k,seat in [('all',None),('first',1),('second',0)]}
     (data/'results.json').write_text(json.dumps(summary,indent=2))
     print(json.dumps(summary))
-if __name__=='__main__':main()
+def verify_openings(path):
+    from itertools import combinations_with_replacement
+    triples = list(combinations_with_replacement('123456789', 3))
+    with path.open() as f:
+        rows = list(csv.DictReader(f))
+    pairs = {}
+    for row in rows:
+        verify(row, 'v1')
+        opening_id = int(row['opening_id'])
+        assert 0 <= opening_id < 2 * len(triples)**2
+        a, b = divmod(opening_id // 2, len(triples))
+        assert row['start'] == 'AB'[opening_id % 2] + ''.join(triples[a]+triples[b])
+        pairs.setdefault(int(row['pair']), []).append(row)
+    for pair in pairs.values():
+        assert len(pair) == 2 and pair[0]['start'] == pair[1]['start']
+        assert {r['bot_first'] for r in pair} == {'0', '1'}
+    assert len({r['game'] for r in rows}) == len(rows)
+    return {name:aggregate([r for r in rows if seat is None or int(r['bot_first']) == seat])
+            for name,seat in [('all',None),('first',1),('second',0)]}
+
+if __name__=='__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--random-openings', type=Path, metavar='CSV')
+    args = parser.parse_args()
+    if args.random_openings:
+        print(json.dumps(verify_openings(args.random_openings), indent=2))
+    else:
+        main()

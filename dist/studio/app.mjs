@@ -1,3 +1,4 @@
+import {BOARD_COUNT, drawOpeningId, openingFromId, openingId, openingProof} from './openings.mjs';
 import {OPEN, replay, inspect, tapText} from './rules.mjs';
 import {simNames} from './policy.mjs';
 import {createStudy, importStudy, position, branch, forkPly} from './study.mjs';
@@ -248,7 +249,8 @@ function setWDL(v) {
     $('pct'+el).textContent = pct(vv).replace('‹', '<');
     $('prob'+el).style.width = 100*vv+'%';
   }
-  $('estimateLabel').textContent = v.source === 'terminal'?'Final result':v.source === 'forced'?'Exact outcome · forced continuation':'Guided 15% vs Guided 15% · calibrated estimate';
+  $('estimateLabel').textContent = v.source === 'terminal'?'Final result':v.source === 'forced'?'Exact outcome · forced continuation':
+    (study.start.a.join('') === '111' && study.start.b.join('') === '111' ? 'Guided 15% vs Guided 15% · calibrated estimate' : 'Guided 15% self-play estimate · trained on the all-ones opening');
 }
 function showAnalysis() {
   const tr = $('rows');
@@ -420,6 +422,35 @@ function updateChart() {
 function simLabel() {
   return simNames[config.policyA]+' vs '+simNames[config.policyB]+' · '+fmt(config.games)+' games · seed '+config.seed;
 }
+let certificateData;
+async function showOpeningNote() {
+  const box = $('openingNote'), rev = revision, id = openingId(study.start);
+  box.replaceChildren();
+  box.hidden = study.ply !== 0 || id === null;
+  if (box.hidden) return;
+  const link = document.createElement('a');
+  link.href = 'index.html?opening='+id;
+  link.textContent = 'Opening #'+id;
+  box.append(link);
+  try {
+    certificateData ??= fetch('./assets/opening-proofs.bin').then(async response => {
+      if (!response.ok) throw Error();
+      const table = new Uint8Array(await response.arrayBuffer());
+      if (table.length !== BOARD_COUNT * 2) throw Error();
+      return table;
+    });
+    const table = await certificateData;
+    if (revision !== rev) return;
+    const proof = openingProof(study.start, table);
+    if (!proof) { box.append(' · No opening certificate on file.'); return; }
+    box.append(' · Player '+proof.winner+' can force a win'+(proof.short?' within six taps.':'.'));
+    if (proof.move) box.append(' Winning first tap: '+tapText(String(proof.move))+'.');
+  } catch {
+    certificateData = null;
+    if (revision === rev) box.append(' · Opening certificate unavailable.');
+  }
+}
+
 function refresh() {
   const pos = position(study), rev = ++revision;
   info = inspect(replay(pos));
@@ -438,6 +469,7 @@ function refresh() {
   renderBoard();
   renderTransport();
   renderBans();
+  showOpeningNote();
   syncArena();
   $('engineName').textContent = nameOf(config.engine);
   $('effort').textContent = presets[config.preset].name+' search';
@@ -667,12 +699,14 @@ function wire() {
     renderBoard();
     syncArena();
   };
-  $('arenaNew').onclick = () => {
-    openStudy(createStudy('New game'));
+  function newGame(opening) {
+    openStudy(opening === undefined ? createStudy('New game') : createStudy('Random opening #'+opening, openingFromId(opening)));
     mode = 'play';
     renderBoard();
     syncArena();
   };
+  $('arenaNew').onclick = () => newGame();
+  $('arenaRandom').onclick = () => newGame(drawOpeningId());
   $('actualPick').onclick = async() => {
     const rev = revision, engine = config.engine, seed = (config.seed+Math.imul(study.ply, 2654435761))>>>0;
     $('actualPick').disabled = true;
@@ -782,7 +816,16 @@ async function boot() {
   for (const s of ['A', 'B'])if (config['seat'+s] !== 'human' && !engines.has(config['seat'+s]))config['seat'+s] = defaults['seat'+s];
   try {
     const stored = read('current', null), url = new URLSearchParams(location.search);
-    if (url.has('game')) {
+    if (url.has('opening')) {
+      const raw = url.get('opening');
+      if (raw !== 'random' && !/^\d{1,5}$/.test(raw)) throw Error('Invalid opening number.');
+      const id = raw === 'random' ? drawOpeningId() : Number(raw);
+      if (raw === 'random') {
+        url.set('opening', String(id));
+        history.replaceState(null, '', location.pathname+'?'+url+location.hash);
+      }
+      study = createStudy('Opening #'+id, openingFromId(id));
+    } else if (url.has('game')) {
       const n = Number(url.get('tap') ?? 0);
       study = await loadGame(url.get('suite') || 'v2-v1', Number(url.get('game')), Number.isInteger(n)?n:0);
     } else study = stored?importStudy(stored):await loadGame('v2-v1', 1, 12);

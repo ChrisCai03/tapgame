@@ -6,7 +6,9 @@ Two playable C++17 bots for the three-number finger addition game. Both use iter
 
 [Open Tapgame Studio](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html) · [Study the three-tap blockade in game 1](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?game=1&tap=268)
 
-Review the 10,000 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
+Review the 11,000 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
+
+Draw a random opening in Play or New study. The opening number lets you share the same hands and starting player. At tap zero, Studio shows any known forced win and its winning first tap when the mover can force the result. [Draw an opening](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?opening=random) · [Proven openings and random-start benchmark](docs/random-openings.md)
 
 The GUI and independent engines communicate through TGEP/1. The same JSON messages work in a browser worker and over a process's standard input/output. To run the workbench locally with Node.js 20 or newer, use:
 
@@ -18,7 +20,7 @@ To add a C++, Python or other executable, use the [protocol and engine registrat
 
 ## Rules
 
-Each player starts with three live numbers, all 1. On your turn, choose one of your live numbers and one of your opponent's. Replace your chosen number with their sum modulo 10. Withdraw it permanently if the sum ends in zero. The opponent's number stays in place.
+Each player starts with three live numbers. The standard opening gives everyone three ones. The random-opening option draws two sorted triples from digits 1–9 and chooses who starts. On your turn, choose one of your live numbers and one of your opponent's. Replace your chosen number with their sum modulo 10. Withdraw it permanently if the sum ends in zero. The opponent's number stays in place.
 
 A tap is illegal if it recreates any previous board, including the opening. To compare boards, sort each player's numbers and keep the two players distinct. The player to move is ignored when comparing boards.
 
@@ -43,7 +45,8 @@ V1 searches up to eight taps with a budget of 4,500 main nodes per decision. V2 
 | --- | ---: | ---: | ---: | ---: |
 | V1 vs. random | 2,000 | 2,000 | 0 | 0 |
 | V1 vs. heuristic | 2,000 | 2,000 | 0 | 0 |
-| V2 vs. v1, released settings | 5,000 | 4,738 | 0 | 262 |
+| V2 vs. v1, random openings at released settings | 1,000 | 872 | 0 | 128 |
+| V2 vs. v1, released settings, standard opening | 5,000 | 4,738 | 0 | 262 |
 | V2 vs. v1, both limited to 4,500 nodes and depth 8 | 500 | 238 | 0 | 262 |
 | V2 vs. v1, both limited to 4,500 nodes, v2 depth 18 | 500 | 404 | 0 | 96 |
 

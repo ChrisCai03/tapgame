@@ -1,10 +1,12 @@
+import {drawOpeningId, openingFromId, openingId} from './openings.mjs';
 import {createStudy, importStudy} from './study.mjs';
 import {OPEN} from './rules.mjs';
 import {engines} from './client.mjs';
 import {simNames} from './policy.mjs';
 
 export const sets = {
-  'v2-v1':['V2 vs V1 · Released settings', 5000], 'v2-equal':['V2 vs V1 · Equal depth and nodes', 500],
+  'v2-v1':['V2 vs V1 · Released settings', 5000],
+  'random-openings-v2-v1':['V2 vs V1 · Random openings', 1000], 'v2-equal':['V2 vs V1 · Equal depth and nodes', 500],
   'v2-equal-nodes':['V2 vs V1 · Equal nodes', 500], random:['V1 vs random', 2000], heuristic:['V1 vs heuristic', 2000]
 };
 export const presets = {quick:{name:'Quick', nodes:4500, depth:8}, balanced:{name:'Balanced', nodes:36000, depth:13}, deep:{name:'Deep', nodes:500000, depth:18}};
@@ -22,9 +24,13 @@ export async function loadGame(suite, id, ply = 0) {
       }));
   const rows = await dataCache.get(suite), row = rows[id]?.split(',');
   if (!row || Number(row[0]) !== id || row[7]?.length !== Number(row[5])*2)throw Error('Invalid archive record.');
-  const study = createStudy(sets[suite][0].split(' · ')[0]+' / Game '+String(id).padStart(4, '0')+(suite === 'v2-equal'?' (depth control)':suite === 'v2-equal-nodes'?' (node control)':''), OPEN, row[7], ply);
-  const pair = suite.startsWith('v2-')?['Tapgame v2', 'Tapgame v1']:['Tapgame v1', suite === 'random'?'Uniform random':'Heuristic'];
-  if (row[2] === '0')pair.reverse();
+  const randomStart = suite === 'random-openings-v2-v1';
+  const start = randomStart ? openingFromId(Number(row[10])) : OPEN;
+  if (randomStart && row[8] !== start.turn+start.a.join('')+start.b.join('')) throw Error('Opening number and recorded board disagree.');
+  const suffix = randomStart ? ' · opening #'+row[10] : suite === 'v2-equal' ? ' (depth control)' : suite === 'v2-equal-nodes' ? ' (node control)' : '';
+  const study = createStudy(sets[suite][0].split(' · ')[0]+' / Game '+String(id).padStart(4, '0')+suffix, start, row[7], ply);
+  const pair = suite.startsWith('v2-') || randomStart ? ['Tapgame v2', 'Tapgame v1'] : ['Tapgame v1', suite === 'random' ? 'Uniform random' : 'Heuristic'];
+  if ((row[2] === '0') !== (start.turn === 'B')) pair.reverse();
   study.players = {A:pair[0], B:pair[1]};
   return study;
 }
@@ -73,17 +79,34 @@ export function showDialog(type, api) {
       });
   } else if (type === 'new' || type === 'edit') {
     const src = type === 'edit'?api.info:OPEN;
+    const randomControls = type === 'new' ? '<div class="btnRow"><button id="drawStart">Draw random opening</button><span id="drawLabel" role="status"></span></div><p>Draws two three-number hands and the first player. Equal chances for all 165 sorted hands.</p>' : '';
     const boxes = side => src[side].map((n, i) => '<input aria-label="Player '+side.toUpperCase()+' number '+(i+1)+'" type="number" min="0" max="9" step="1" value="'+n+'" id="digit'+side+i+'">').join('');
     body(type === 'edit'?'Set up this position':'New study', '<label>Study name<input id="studyName" maxlength="100" value="'+(type === 'edit'?'Position from tap '+api.info.ply:'Untitled study')+'"></label>'+
-      '<div class="formRow"><div><label>Player A</label><div class="boardEditor">'+boxes('a')+'</div></div><div><label>Player B</label><div class="boardEditor">'+boxes('b')+'</div></div></div>'+
+      randomControls+'<div class="formRow"><div><label>Player A</label><div class="boardEditor">'+boxes('a')+'</div></div><div><label>Player B</label><div class="boardEditor">'+boxes('b')+'</div></div></div>'+
       '<label>First to move<select id="startTurn">'+selectOpts([['A', 'Player A'], ['B', 'Player B']], src.turn)+'</select></label><p>Use 0 for a withdrawn number. A setup begins a new history at tap 0. Your current study stays in Recent studies.</p>'+err()+'<button id="createStudy" class="primary">Open position</button>');
+    let drawnId = null;
+    if (type === 'new') {
+      $('drawStart').onclick = () => {
+        drawnId = drawOpeningId();
+        const start = openingFromId(drawnId);
+        for (const side of ['a', 'b']) start[side].forEach((digit, i) => { $('digit'+side+i).value = digit; });
+        $('startTurn').value = start.turn;
+        $('drawLabel').textContent = 'Opening #'+drawnId;
+      };
+      for (const field of b.querySelectorAll('.boardEditor input, #startTurn')) {
+        field.oninput = () => { drawnId = null; $('drawLabel').textContent = ''; };
+      }
+    }
     apply('createStudy', () => {
         const hand = k => [0, 1, 2].map(i => {
             const v = $('digit'+k+i).value.trim();
             if (!/^[0-9]$/.test(v))throw Error('Enter one digit in each box.');
             return Number(v);
           });
-        api.open(createStudy($('studyName').value.trim() || 'Untitled study', {a:hand('a'), b:hand('b'), turn:$('startTurn').value}));
+        const start = {a:hand('a'), b:hand('b'), turn:$('startTurn').value};
+        let name = $('studyName').value.trim() || 'Untitled study';
+        if (drawnId !== null && name === 'Untitled study' && openingId(start) === drawnId) name = 'Random opening #'+drawnId;
+        api.open(createStudy(name, start));
       });
   } else if (type === 'settings') {
     body('Analysis settings', '<label>Analysis engine<select id="analysisEngine">'+selectOpts([...engines].filter(([, e]) => e.search).map(([id, e]) => [id, e.name]), options.engine)+'</select></label><label>Analysis budget<select id="budget">'+selectOpts(Object.entries(presets).map(([id, p]) => [id, p.name+' · '+p.nodes.toLocaleString()+' nodes / '+p.depth+' taps']), options.preset)+'</select></label><p>The candidate table compares taps at the deepest depth completed for every legal choice. Playing engines use their own released limits.</p>'+err()+'<button class="primary" id="applySettings">Apply settings</button>');
@@ -98,6 +121,8 @@ export function showDialog(type, api) {
       });
   } else {
     body('Workbench guide', '<h3>Read a position</h3><p>Amber is Player A and mint is Player B. Select a live number on the moving side, then an opposing number to add. A result of zero withdraws that number. Clear all three or leave the opponent without a legal tap to win. The timeout is 20,000 taps without a withdrawal.</p>'+
+      '<h3>Try a different opening</h3><p>In Play, select Random opening for two fresh three-number hands and a randomly chosen first player. In New study you can draw, inspect and edit the opening. Click its number at tap zero for a reusable link.</p>'+
+      '<p>Among 27,225 pairs of hands ordered by who moves first, the opening search proves 2,681 wins for the first player and 100 for the second. Try <a href="index.html?opening=27040">a forced win in five taps</a> or <a href="index.html?opening=86">a second-player win</a>. The standard all-ones opening is unresolved.</p>'+
       '<h3>Explore a continuation</h3><p>Select a candidate, then click a tap in its continuation to follow the line that far. The game record keeps your variations. Use Left/Right to step, Home/End to jump and Space to replay. Click a forbidden tap to revisit the earlier board.</p>'+
       '<h3>Scores, proofs and percentages</h3><p>Higher search scores favor the side to move. A proof accounts for the current repetition history. A line can stop at a search horizon or a certified endgame. A distance appears only for a forced sequence all the way to termination.</p>'+
       '<p>The chart always follows Player A. W/D/L predicts Guided 15% against itself, trained on 42,000 games, calibrated on 9,000 and tested on a separate 9,000. Three-outcome Brier score: 0.339 (constant forecast 0.500, lower is better). All 60,000 games were decisive. The model uses a small pooled draw estimate; its local draw risk could not be calibrated. Forced continuations show their exact outcome. An edited opening or late blockade can be outside the training distribution. Simulations let you test a position directly.</p>'+

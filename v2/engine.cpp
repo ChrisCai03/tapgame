@@ -145,6 +145,8 @@ int main(int argc,char**argv){
  for(int s=0;s<N;s++)if(!(old>>graph[s].value)||!(updated>>value2[s]))throw runtime_error("model missing");
  buildEndgames();Search v2;
  string mode=argv[1];
+ const bool matchStart=mode=="match-start";
+ if(matchStart)mode="match";
  if(mode=="small-table"){
    for(int s=0;s<N;s++)if(s/H && s%H && phaseCount[s]<=3){
      for(int a:{s/H,s%H}){for(int x:hands[a])cout<<x;cout<<",";}
@@ -160,7 +162,7 @@ int main(int argc,char**argv){
  v2.limit=stoi(argv[4]);int band=stoi(argv[5]);
  if(argc>6)v2.depth=stoi(argv[6]);
  unordered_map<string,vector<int>> cache[2]; // exact opening-prefix memo; past the opening search directly
- if(mode=="match")cout<<"game,seed,bot_first,result,reason,taps,withdrawals,trace\n";
+ if(mode=="match")cout<<"game,seed,bot_first,result,reason,taps,withdrawals,trace"<<(matchStart?",start":"")<<"\n";
  string line;
  while(getline(cin,line)){
    int id=0,first=1;unsigned seed=0;string given;istringstream in(line);
@@ -168,8 +170,8 @@ int main(int argc,char**argv){
    else{in>>seed>>given;}
    int side=1-first,t=0,quiet=0,s=opening,drops=0,plies=0,winner=-1;string reason,trace;
    bool custom=false;
-   if(mode!="match"){
-     string start;
+   string start;
+   if(mode!="match" || matchStart){
      if(given=="-")given.clear();
      if(in>>start){
        if(start.size()!=7 || (start[0]!='A' && start[0]!='B') ||
@@ -178,7 +180,11 @@ int main(int argc,char**argv){
        t=(start[0]=='B');s=key(hand(1)*H+hand(4),t);
        if(!s)throw runtime_error("both seats cleared");
        custom=true;
-     }
+     }else if(matchStart)throw runtime_error("match-start requires an opening");
+   }
+   if(matchStart){
+     if(first<0 || first>1 || live[s/H]!=3 || live[s%H]!=3)throw runtime_error("match-start needs two full hands and a 0/1 seat flag");
+     side=first?t:1-t;
    }
    Player p(seed);history.fill(0);
    for(;;){
@@ -206,7 +212,7 @@ int main(int argc,char**argv){
      auto m=graph[s].moves[pick];trace+=char('0'+m.x);trace+=char('0'+m.y);plies++;
      quiet=m.drop?0:quiet+1;drops+=m.drop;s=m.next;t^=1;
    }
-   if(mode=="match")cout<<id<<","<<seed<<","<<first<<","<<(winner<0?"draw":winner==side?"win":"loss")<<","<<reason<<","<<plies<<","<<drops<<","<<trace<<"\n";
+   if(mode=="match")cout<<id<<","<<seed<<","<<first<<","<<(winner<0?"draw":winner==side?"win":"loss")<<","<<reason<<","<<plies<<","<<drops<<","<<trace<<(matchStart?","+start:"")<<"\n";
    else if(!reason.empty()){if(trace.size()!=given.size())throw runtime_error("prefix continues past game end");if(mode=="analyze")cout<<"{\"terminal\":{\"winner\":"<<(winner<0?"null":winner?"\"B\"":"\"A\"")<<",\"reason\":\""<<(reason=="cleared"?"clearance":reason=="blocked"?"blockade":"timeout")<<"\"},\"candidates\":[],\"recommended\":null,\"depth\":0,\"nodes\":0}\n";
      else cout<<"game over\n";}
  }

@@ -114,4 +114,6 @@ TAPGAME_NATIVE=./engine2 node --test tests/*.test.mjs
 TAPGAME_NATIVE=./engine2 TAPGAME_WDL_SAMPLES=wdl-samples.csv node --test tests/*.test.mjs
 ```
 
-The suite replays all 10,000 archived records, compares fresh endgame labels, compares browser and native search results, and plays complete games over the process bridge. Set `TAPGAME_FROZEN` to an original v2 executable to compare against its playing decisions. The self-contained Python play-only example is in [studio/example_bot.py](../studio/example_bot.py).
+The suite replays 10,000 standard-opening games and 1,000 paired random-opening games, compares fresh endgame labels, compares browser and native search results, and plays complete games over the process bridge. Set `TAPGAME_FROZEN` to an original v2 executable to compare against its playing decisions. The self-contained Python play-only example is in [studio/example_bot.py](../studio/example_bot.py).
+
+Studio resolves a random opening into an explicit TGEP/1 `position.start` with `a`, `b` and `turn`. Both engines receive the same board and a fresh history. Opening IDs, random seeds and proof badges are workbench metadata. See [Random openings](random-openings.md) for the sampling and replay conventions.

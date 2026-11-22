@@ -22,7 +22,7 @@ export function rng(seed) {
   };
 }
 export const rolloutNames = {guided:'Guided 15%', heuristic:'Heuristic', random:'Uniform random'};
-export const simNames = {...rolloutNames, v1:'Tapgame v1 · released', v2:'Tapgame v2 · released'};
+export const simNames = {...rolloutNames, v3:'Tapgame v3 · released', v1:'Tapgame v1 · released', v2:'Tapgame v2 · released'};
 export function simpleMove(name, p, legal, random, tables) {
   if (legal.length === 1) return legal[0];
   if (name === 'random' || (name === 'guided' && random()<0.15)) return legal[Math.floor(random()*legal.length)];
@@ -73,8 +73,8 @@ export function simulate(p, tables, {games, seed, policyA, policyB}) {
       const policy = q.t?policyB:policyA;
       let edge = opts[0];
       if (opts.length>1) {
-        if (policy === 'v1' || policy === 'v2') {
-          const limits = policy === 'v1'?{nodes:4500, depth:8}:{nodes:500000, depth:18};
+        if (policy === 'v1' || policy === 'v2' || policy === 'v3') {
+          const limits = policy === 'v1'?{nodes:4500, depth:8}:{nodes:500000, depth:policy === 'v3'?32:18};
           const picked = new Search(tables, policy, q, limits).choose(Math.floor(random()*4294967296));
           edge = opts.find(e => String(code[e]) === picked);
         } else edge = simpleMove(policy, q, opts, random, tables);

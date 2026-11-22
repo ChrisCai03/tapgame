@@ -1,6 +1,6 @@
 import {RULESET, ENGINE_NAMES} from './protocol.mjs';
 import {replay, step, inspect} from './rules.mjs';
-export const engines = new Map(Object.entries(ENGINE_NAMES).map(([id, name]) => [id, {id, name, search:id === 'v2' || id === 'v1', local:false}]));
+export const engines = new Map(Object.entries(ENGINE_NAMES).map(([id, name]) => [id, {id, name, search:id === 'v3' || id === 'v2' || id === 'v1', local:false}]));
 export async function discover() {
   if (!['localhost', '127.0.0.1'].includes(location.hostname))return;
   const res = await fetch('/tgep/engines');

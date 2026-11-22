@@ -1,0 +1,64 @@
+{
+  "all": {
+    "games": 320,
+    "win": 218,
+    "loss": 102,
+    "draw": 0,
+    "median": 300.5,
+    "longest": 485,
+    "mean": 279.29,
+    "cleared": 161,
+    "blocked": 159
+  },
+  "first": {
+    "games": 160,
+    "win": 146,
+    "loss": 14,
+    "draw": 0,
+    "median": 295.0,
+    "longest": 463,
+    "mean": 273.68,
+    "cleared": 52,
+    "blocked": 108
+  },
+  "second": {
+    "games": 160,
+    "win": 72,
+    "loss": 88,
+    "draw": 0,
+    "median": 310.5,
+    "longest": 485,
+    "mean": 284.91,
+    "cleared": 109,
+    "blocked": 51
+  },
+  "opening_draws": 160,
+  "distinct_opening_ids": 160,
+  "score": 0.68125,
+  "paired_score_ci95": [
+    0.640625,
+    0.721875
+  ],
+  "head_to_head_elo": 131.9,
+  "elo_ci95": [
+    100.4,
+    165.7
+  ],
+  "by_opening_certificate": {
+    "unresolved": {
+      "win": 200,
+      "loss": 84
+    },
+    "proved_for_v3": {
+      "win": 18
+    },
+    "proved_for_v2": {
+      "loss": 18
+    }
+  },
+  "points_per_two_games": {
+    "0": 2,
+    "1": 98,
+    "2": 60
+  }
+}

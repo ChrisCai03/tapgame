@@ -1,12 +1,14 @@
 # Tapgame
 
-Two playable C++17 bots for the three-number finger addition game. Both use iterative-deepening alpha–beta search and position values learned from self-play. The frozen tables are included, so playing requires only a C++ compiler.
+Three playable C++17 bots for the three-number finger addition game. V3 combines history-checked winning strategies with alpha–beta search and V2's frozen self-play evaluation. The browser and command-line engines include the same proof and evaluation tables.
+
+[Play V3 from a random opening](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?play=v3&opening=random) · [V3 search, proofs and benchmark](v3/README.md)
 
 ## Analysis workbench
 
 [Open Tapgame Studio](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html) · [Study the three-tap blockade in game 1](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?game=1&tap=268)
 
-Review the 23,000 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
+Review the 23,320 archived games, inspect legal and banned taps, follow ranked continuations and keep alternative lines. Click an arithmetic pair on the board to play it. The editor can start a fresh study from a custom board and either seat. The workbench supports human play, engine matches, evaluation graphs, an instant policy-specific W/D/L estimate and seeded simulations from the current history.
 
 Draw a random opening in Play or New study. The opening number lets you share the same hands and starting player. At tap zero, Studio shows any known forced win and its winning first tap when the mover can force the result. [Draw an opening](https://tapgame-match-report.chris-cai.chatgpt.site/studio/index.html?opening=random) · [Proven openings and random-start benchmark](docs/random-openings.md)
 
@@ -43,6 +45,7 @@ V1 searches up to eight taps with a budget of 4,500 main nodes per decision. V2 
 
 | Match | Games | Wins | Timeout draws | Losses |
 | --- | ---: | ---: | ---: | ---: |
+| V3 vs. V2, random openings at released settings | 320 | 218 | 0 | 102 |
 | V1 vs. random | 2,000 | 2,000 | 0 | 0 |
 | V1 vs. heuristic | 2,000 | 2,000 | 0 | 0 |
 | V2 vs. v1, random openings at released settings | 1,000 | 872 | 0 | 128 |

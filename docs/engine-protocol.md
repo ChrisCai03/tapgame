@@ -10,7 +10,7 @@ From the repository root with Node.js 20 or newer:
 node studio/server.mjs
 ```
 
-Open the loopback URL printed in the terminal. All five built-in policies run in browser workers. For external engines, register local executables in a JSON file. The included configuration connects the original C++ v2 through an adapter, v1 through a Node process, and a minimal Python example:
+Open the loopback URL printed in the terminal. All six built-in policies run in browser workers. For external engines, register local executables in a JSON file. The included configuration connects the original C++ v2 through an adapter, v1 through a Node process, and a minimal Python example:
 
 ```sh
 g++ -std=c++17 -O3 v2/engine.cpp -o engine2
@@ -69,9 +69,9 @@ At termination check clearance first, then timeout after 20,000 consecutive taps
 | `inspect` | Board, named turn, ply, quiet count, legal taps and repetition bans. Each banned tap has its earliest `repeatPly`, with the root at 0. |
 | `evaluate` | `wdl:{A,draw,B,source}`, summing to one, and the model's policy pairing. A terminal or fully forced outcome is exact. |
 | `timeline` | An array of A's win estimates at the root and after every recorded tap. |
-| `simulate` | Empirical A/draw/B counts and termination counts from the supplied position. Choose `policyA`, `policyB`, `games` and `seed`. Built-in IDs are `v1`, `v2`, `guided`, `heuristic` and `random`. |
+| `simulate` | Empirical A/draw/B counts and termination counts from the supplied position. Choose `policyA`, `policyB`, `games` and `seed`. Built-in IDs are `v1`, `v2`, `v3`, `guided`, `heuristic` and `random`. |
 
-For `choose` and `analyze`, `limits:{"nodes":36000,"depth":13}` requests up to 36,000 main nodes and a 13-tap horizon. The built-in engines support 16–2,000,000 main nodes and depth 1–32. One-on-one lines and proof work are outside the main-node budget. V2's released playing limits are 500,000 and 18. V1's are 4,500 and 8. `choose` uses playing move order and, for v2, its near-best opening band. `analyze` searches all root candidates with full windows to compare them at the deepest iteration completed for **every** candidate. These modes can recommend different moves.
+For `choose` and `analyze`, `limits:{"nodes":36000,"depth":13}` requests up to 36,000 main nodes and a 13-tap horizon. The built-in engines support 16–2,000,000 main nodes and depth 1–32. One-on-one lines and proof work are outside the main-node budget. V3 plays at 500,000 main nodes and depth 32, with extensions for positions where only one move avoids a known loss. Its graph preparation and proof work run outside this allowance. V2's released playing limits are 500,000 and 18. V1's are 4,500 and 8. `choose` uses playing move order and, for v2, its near-best opening band. `analyze` searches all root candidates with full windows to compare them at the deepest iteration completed for **every** candidate. These modes can recommend different moves.
 
 A real analysis request with a short forced continuation:
 
@@ -95,7 +95,7 @@ The default instant forecast is for **Guided 15% playing itself**. This policy u
 
 For training, one pre-move position is sampled uniformly from each of 60,000 independent seeded games at the standard opening. A gradient-boosted classifier fits decisive results on 42,000 games using board and history features. Logistic calibration uses 9,000 different games. On the remaining 9,000, the learned component's three-outcome Brier score is 0.3386, against 0.5001 for constant training frequencies (unscaled sum of squared class errors, lower is better). All games were decisive. The model uses a pooled Jeffreys-smoothed draw frequency of 0.5 / 42,001. The data cannot establish position-specific draw probabilities. Arbitrary setups and positions under stronger policies can have a different distribution.
 
-**Simulate this position** runs the selected pair from the exact current history. The panel reports W/D/L, completed sample size and Wilson intervals. V1 and v2 use their released search settings. Simulations that reach a deterministic suffix will share it. Seeds reproduce runs, including runs split into batches.
+**Simulate this position** runs the selected pair from the exact current history. The panel reports W/D/L, completed sample size and Wilson intervals. V1, V2 and V3 use their released search settings. Simulations that reach a deterministic suffix will share it. Seeds reproduce runs, including runs split into batches.
 
 To regenerate the assets, run from the repository root:
 

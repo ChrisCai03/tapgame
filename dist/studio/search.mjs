@@ -1,6 +1,7 @@
 // Browser/stdio search. choose follows the released C++ root windows and move order.
 // analyze gives every root tap a full window and records a line at the last common depth.
 import {H, N, QUIET, aHand, live, key, seat, size, code, next, drop, edges, terminal} from './rules.mjs';
+import {V3Context} from './v3.mjs';
 const MATE = 10000, CERT = 8000, INF = 20000;
 const single = s => live[aHand(s)] === 1 && live[s%H] === 1;
 const terminalSign = (s) => !aHand(s)?1:-1;
@@ -82,7 +83,10 @@ function seededIndex(seed, n) {
 export class Search {
   constructor(tables, engine, p, limits, collect = false) {
     this.tab = tables;
-    this.v2 = engine === 'v2';
+    this.v3 = engine === 'v3' ? new V3Context(tables,p) : null;
+    this.v2 = engine === 'v2' || !!this.v3;
+    this.cert = this.v3 ? tables.v3.cert : tables.cert;
+    this.certRank = this.v3 ? tables.v3.rank : tables.certRank;
     this.p = p;
     this.seen = p.seen;
     this.limit = limits.nodes;
@@ -90,8 +94,8 @@ export class Search {
     this.nodes = 0;
     this.collect = collect;
     this.eval = this.v2?tables.evaluate:tables.v1;
-    this.order = Array.from({length:this.depth+3}, () => new Int32Array(9));
-    this.line = Array.from({length:this.depth+3}, () => []);
+    this.order = Array.from({length:this.v3?2*this.depth+20:this.depth+3}, () => new Int32Array(9));
+    this.line = Array.from({length:this.v3?2*this.depth+20:this.depth+3}, () => []);
     // Values are local to this root and never used as position-only scores.
     this.hint = new Int32Array(N);
   }
@@ -102,19 +106,24 @@ export class Search {
     if (!aHand(s) || !(s%H))return terminalSign(s)*(MATE-ply);
     if (quiet>=QUIET)return 0;
     if (single(s))return forced(s, t, ply, quiet, this.seen, this.collect?pv:null);
-    if (this.v2 && fresh && this.tab.cert[s])return this.tab.cert[s]*(CERT-ply-this.tab.certRank[s]);
+    const known=this.v3 && !fresh?this.v3.supported(s,t,quiet):this.v2 && fresh?this.cert[s]:0;
+    if(known)return known*(CERT-ply-this.certRank[s]);
     const start = s*9, order = this.order[ply];
-    let n = 0;
+    let n = 0, safe = 0, delay = 0;
     for (let e = start; e<start+size[s]; e++) {
       const child = next[e];
       if (this.seen[key(child, 1-t)])continue;
       const clear = !(child%H);
-      if (clear || (this.v2 && drop(e) && this.tab.cert[child]<0)) {
+      const outcome=this.v3 && !drop(e)?this.v3.supported(child,1-t,quiet+1):this.v2 && drop(e)?this.cert[child]:0;
+      safe+=Number(!outcome);
+      if(outcome>0)delay=Math.max(delay,this.certRank[child]);
+      if (clear || outcome<0) {
         if (this.collect)pv.push(String(code[e]));
-        return clear?MATE-ply-1:CERT-ply-1-this.tab.certRank[child];
+        return clear?MATE-ply-1:CERT-ply-1-this.certRank[child];
       }
-      let priority = this.eval[child]-(this.v2?20:12)*Number(drop(e));
-      if (this.v2 && this.hint[s] === e+1)priority -= 2000;
+      let priority = this.v3 ? this.v3.evaluate(child,1-t)+(outcome>0?6000:0) :
+        this.eval[child]-(this.v2?20:12)*Number(drop(e));
+      if (this.v2 && this.hint[s] === e+1)priority -= this.v3?12000:2000;
       const entry = priority*16+(e-start);
       let j = n;
       while (j>0 && order[j-1]>entry) {
@@ -125,12 +134,14 @@ export class Search {
       n++;
     }
     if (!n)return -MATE+ply;
-    if (!d)return this.eval[s]-(this.v2?6:3)*(size[s]-n);
+    if(this.v3 && !safe)return -CERT+ply+1+delay;
+    const extend=this.v3 && !this.basePass && safe===1 && ply<this.depth+16;
+    if (!d && !extend)return (this.v3?this.v3.evaluate(s,t):this.eval[s])-(this.v3?12:this.v2?6:3)*(size[s]-n);
     let best = -INF, pick = -1;
     for (let j = 0; j<n; j++) {
       const e = start+(order[j]&15), child = next[e], k = key(child, 1-t);
       this.seen[k] = 1;
-      const v = -this.score(child, 1-t, d-1, -beta, -alpha, ply+1, drop(e), drop(e)?0:quiet+1);
+      const v = -this.score(child, 1-t, extend?d:d-1, -beta, -alpha, ply+1, drop(e), drop(e)?0:quiet+1);
       this.seen[k] = 0;
       if (this.nodes>this.limit)return 0;
       if (v>best) {
@@ -158,18 +169,22 @@ export class Search {
     const {s, t, ply, quiet} = this.p;
     let ids = edges(s, t, this.seen);
     if (ids.length === 1)return String(code[ids[0]]);
-    if (this.v2 && this.tab.nominal[s]>0) {
+    if (this.v3) {
+      const claim=this.v3.claim();
+      if(claim.sign>0 && ids.some(e=>code[e]===claim.move))return String(claim.move);
+    }
+    if (this.v2 && !this.v3 && this.tab.nominal[s]>0) {
       const choice = {};
       if (prove(s, t, 1, this.seen, this.tab, {left:4000}, quiet, choice) && ids.includes(choice.edge))return String(code[choice.edge]);
     }
     if (!this.v2)ids.sort((a, b) => this.eval[next[a]]-this.eval[next[b]]);
     let completed = [ids[0]];
-    const tol = this.v2 && ply<20?12:0;
+    const tol = this.v2 && !this.v3 && ply<20?12:0;
     for (let d = 1; d<=this.depth; d++) {
       let best = -INF;
       const rows = [];
       for (const e of ids) {
-        const value = this.child(e, d, -best+(this.v2?tol+1:0));
+        const value = this.child(e, d, -best+(this.v2 && !this.v3?tol+1:0));
         if (this.nodes>this.limit)return String(code[completed[seededIndex(seed, completed.length)]]);
         rows.push({e, value});
         best = Math.max(best, value);
@@ -177,7 +192,7 @@ export class Search {
       rows.sort((a, b) => b.value-a.value);
       if (this.v2) {
         ids = rows.map(r => r.e);
-        completed = rows.filter(r => r.value>=best-(Math.abs(best)>5000?0:tol)).map(r => r.e);
+        completed = this.v3?[ids[0]]:rows.filter(r => r.value>=best-(Math.abs(best)>5000?0:tol)).map(r => r.e);
       } else {
         completed = [rows[0].e];
         ids = [completed[0], ...ids.filter(e => e !== completed[0])];
@@ -188,8 +203,11 @@ export class Search {
   }
   analyze() {
     const {s, t, quiet} = this.p, turn = seat(t), other = seat(1-t);
+    const claim = this.v3?.claim();
     let ids = edges(s, t, this.seen), ready = [], depth = 0;
     for (let d = 1; d<=this.depth; d++) {
+      // Complete a shallow comparison even at the minimum TGEP budget.
+      this.basePass = !!this.v3 && d===1;
       const rows = [];
       for (const e of ids) {
         const value = this.child(e, d, INF);
@@ -205,7 +223,13 @@ export class Search {
       ids = rows.map(r => ids.find(e => code[e] === Number(r.move)));
     }
     // A root strategy can be verified even when its witness is beyond the common search horizon.
-    if (this.v2 && !single(s) && this.tab.nominal[s]) {
+    if (this.v3 && claim.sign) {
+      for (const row of ready) if (claim.sign<0 || Number(row.move)===claim.move) {
+        const winner=claim.sign>0?turn:other;
+        if(row.proven!==winner)row.pv=[row.move];
+        row.proven=winner;
+      }
+    } else if (!this.v3 && this.v2 && !single(s) && this.tab.nominal[s]) {
       const sign = this.tab.nominal[s], witness = {};
       if (prove(s, t, sign, this.seen, this.tab, {left:4000}, quiet, witness)) {
         for (const row of ready)if (sign<0 || code[witness.edge] === Number(row.move))row.proven = sign>0?turn:other;
@@ -227,7 +251,8 @@ export class Search {
         q.seen[key(q.s, q.t)] = 1;
       }
       const end = terminal(q);
-      row.end = end?end.reason:this.v2 && fresh && this.tab.cert[q.s]?'proof frontier':'horizon';
+      const supported=this.v3 && row.proven && !end && !fresh;
+      row.end = end?end.reason:supported || (this.v2 && fresh && this.cert[q.s])?'proof frontier':'horizon';
       row.distance = allForced && end?row.pv.length:null;
     }
     const winner = ready.some(r => r.proven === turn)?turn:ready.length && ready.every(r => r.proven === other)?other:null;

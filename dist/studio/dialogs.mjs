@@ -9,11 +9,12 @@ const leaguePairs = Object.keys(leagueBots).flatMap((left, index, bots) => bots.
 export const sets = {
   ...Object.fromEntries(leaguePairs.map(([left,right]) =>
     ['league/'+left+'-'+right, [leagueBots[left]+' vs '+leagueBots[right]+' · Round robin', 2000]])),
+  'v3/championship':['V3 vs V2 · Championship', 320],
   'v2-v1':['V2 vs V1 · Released settings', 5000],
   'random-openings-v2-v1':['V2 vs V1 · Random openings', 1000], 'v2-equal':['V2 vs V1 · Equal depth and nodes', 500],
   'v2-equal-nodes':['V2 vs V1 · Equal nodes', 500], random:['V1 vs random', 2000], heuristic:['V1 vs heuristic', 2000]
 };
-export const presets = {quick:{name:'Quick', nodes:4500, depth:8}, balanced:{name:'Balanced', nodes:36000, depth:13}, deep:{name:'Deep', nodes:500000, depth:18}};
+export const presets = {quick:{name:'Quick', nodes:4500, depth:8}, balanced:{name:'Balanced', nodes:36000, depth:13}, deep:{name:'Deep', nodes:500000, depth:18}, championship:{name:'V3 match', nodes:500000, depth:32}, extended:{name:'Extended', nodes:2000000, depth:32}};
 export const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[c]);
 const dataCache = new Map(), $ = id => document.getElementById(id);
 export const selectOpts = (entries, selected) => entries.map(([v, k]) => '<option value="'+esc(v)+'" '+(String(v) === String(selected)?'selected':'')+'>'+esc(k)+'</option>').join('');
@@ -29,12 +30,13 @@ export async function loadGame(suite, id, ply = 0) {
   const rows = await dataCache.get(suite), row = rows[id]?.split(',');
   if (!row || Number(row[0]) !== id || row[7]?.length !== Number(row[5])*2)throw Error('Invalid archive record.');
   const league = suite.startsWith('league/');
-  const randomStart = league || suite === 'random-openings-v2-v1';
+  const championship = suite === 'v3/championship';
+  const randomStart = championship || league || suite === 'random-openings-v2-v1';
   const start = randomStart ? openingFromId(Number(row[10])) : OPEN;
   if (randomStart && row[8] !== start.turn+start.a.join('')+start.b.join('')) throw Error('Opening number and recorded board disagree.');
   const suffix = randomStart ? ' · opening #'+row[10] : suite === 'v2-equal' ? ' (depth control)' : suite === 'v2-equal-nodes' ? ' (node control)' : '';
   const study = createStudy(sets[suite][0].split(' · ')[0]+' / Game '+String(id).padStart(4, '0')+suffix, start, row[7], ply);
-  const pair = league ? suite.slice(7).split('-').map(bot => leagueBots[bot]) :
+  const pair = championship ? ['Tapgame v3','Tapgame v2'] : league ? suite.slice(7).split('-').map(bot => leagueBots[bot]) :
     suite.startsWith('v2-') || randomStart ? ['Tapgame v2', 'Tapgame v1'] : ['Tapgame v1', suite === 'random' ? 'Uniform random' : 'Heuristic'];
   if ((row[2] === '0') !== (start.turn === 'B')) pair.reverse();
   study.players = {A:pair[0], B:pair[1]};
@@ -115,7 +117,7 @@ export function showDialog(type, api) {
         api.open(createStudy(name, start));
       });
   } else if (type === 'settings') {
-    body('Analysis settings', '<label>Analysis engine<select id="analysisEngine">'+selectOpts([...engines].filter(([, e]) => e.search).map(([id, e]) => [id, e.name]), options.engine)+'</select></label><label>Analysis budget<select id="budget">'+selectOpts(Object.entries(presets).map(([id, p]) => [id, p.name+' · '+p.nodes.toLocaleString()+' nodes / '+p.depth+' taps']), options.preset)+'</select></label><p>The candidate table compares taps at the deepest depth completed for every legal choice. Playing engines use their own released limits.</p>'+err()+'<button class="primary" id="applySettings">Apply settings</button>');
+    body('Analysis settings', '<label>Analysis engine<select id="analysisEngine">'+selectOpts([...engines].filter(([, e]) => e.search).map(([id, e]) => [id, e.name]), options.engine)+'</select></label><label>Analysis budget<select id="budget">'+selectOpts(Object.entries(presets).map(([id, p]) => [id, p.name+' · '+p.nodes.toLocaleString()+' nodes / '+p.depth+' taps']), options.preset)+'</select></label><p>The candidate table compares taps at the deepest depth completed for every legal choice. Play uses each engine’s match settings, with an optional extended V3 budget.</p>'+err()+'<button class="primary" id="applySettings">Apply settings</button>');
     apply('applySettings', () => api.settings({engine:$('analysisEngine').value, preset:$('budget').value}));
   } else if (type === 'simulation') {
     const opts = Object.entries(simNames), s = api.config;
@@ -128,10 +130,10 @@ export function showDialog(type, api) {
   } else {
     body('Workbench guide', '<h3>Read a position</h3><p>Amber is Player A and mint is Player B. Select a live number on the moving side, then an opposing number to add. A result of zero withdraws that number. Clear all three or leave the opponent without a legal tap to win. The timeout is 20,000 taps without a withdrawal.</p>'+
       '<h3>Try a different opening</h3><p>In Play, select Random opening for two fresh three-number hands and a randomly chosen first player. In New study you can draw, inspect and edit the opening. Click its number at tap zero for a reusable link.</p>'+
-      '<p>Among 27,225 pairs of hands ordered by who moves first, the opening search proves 2,681 wins for the first player and 100 for the second. Try <a href="index.html?opening=27040">a forced win in five taps</a> or <a href="index.html?opening=86">a second-player win</a>. The standard all-ones opening is unresolved.</p>'+
+      '<p>Among 27,225 pairs of hands ordered by who moves first, the opening search proves 2,787 wins for the first player and 120 for the second. Try <a href="index.html?opening=27040">a forced win in five taps</a> or <a href="index.html?opening=86">a second-player win</a>. The standard all-ones opening is unresolved.</p>'+
       '<h3>Explore a continuation</h3><p>Select a candidate, then click a tap in its continuation to follow the line that far. The game record keeps your variations. Use Left/Right to step, Home/End to jump and Space to replay. Click a forbidden tap to revisit the earlier board.</p>'+
       '<h3>Scores, proofs and percentages</h3><p>Higher search scores favor the side to move. A proof accounts for the current repetition history. A line can stop at a search horizon or a certified endgame. A distance appears only for a forced sequence all the way to termination.</p>'+
       '<p>The chart always follows Player A. W/D/L predicts Guided 15% against itself, trained on 42,000 games, calibrated on 9,000 and tested on a separate 9,000. Three-outcome Brier score: 0.339 (constant forecast 0.500, lower is better). All 60,000 games were decisive. The model uses a small pooled draw estimate; its local draw risk could not be calibrated. Forced continuations show their exact outcome. An edited opening or late blockade can be outside the training distribution. Simulations let you test a position directly.</p>'+
-      '<h3>Connect another engine</h3><p>The browser ships with five bots. In a local checkout, run <code>node studio/server.mjs --engines studio/engines.example.json</code> after building the native executable. The bridge handshakes with registered processes and lists compatible engines in Play and Settings. Each exchange is a versioned TGEP/1 JSON request and reply.</p><p><a href="https://github.com/ChrisCai03/tapgame/blob/main/docs/engine-protocol.md">Engine protocol and examples</a></p>');
+      '<h3>Connect another engine</h3><p>The browser includes V3, V2, V1 and three rollout policies. In a local checkout, run <code>node studio/server.mjs --engines studio/engines.example.json</code> after building the native executable. The bridge handshakes with registered processes and lists compatible engines in Play and Settings. Each exchange is a versioned TGEP/1 JSON request and reply.</p><p><a href="https://github.com/ChrisCai03/tapgame/blob/main/docs/engine-protocol.md">Engine protocol and examples</a></p>');
   }
 }

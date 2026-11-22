@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#133a34"><title>V3 vs V2 · Tapgame Studio</title>
+<link rel="icon" href="data:,"><link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="league.css">
+<script type="module" src="championship.mjs"></script>
+</head>
+<body class="league">
+<header class="mast"><div class="shell mastInner"><a class="brand" href="index.html"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>Tapgame <b>Studio</b></a><a class="back" href="index.html?play=v3&amp;opening=random">Play against V3 ↗</a></div></header>
+<main class="shell leagueMain">
+<header class="leagueHead"><div><p class="overline">Random-opening championship</p><h1>V3 vs V2</h1><p>160 opening draws. Each bot played each opening from both seats.</p></div><div class="ratingHero"><span>V3 win rate</span><b id="score">…</b><span id="interval">Across 320 games</span></div></header>
+<p id="reportError" role="alert" hidden></p>
+<div class="leagueGrid"><section class="paper"><h2>Results by starting seat</h2><p>Outcomes from V3’s perspective. A timeout is 10,000 two-tap rounds without a withdrawal.</p>
+<div class="scroll"><table><thead><tr><th>V3 seat</th><th>Wins</th><th>Draws</th><th>Losses</th><th>Win rate</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section class="paper"><h2>Play and review</h2><p>Take Player A against V3 on a fresh random opening. Choose Extended in Play to allow up to two million main search nodes per decision.</p><p><a href="index.html?play=v3&amp;opening=random">Start a game against V3 →</a></p><p><a href="index.html?suite=v3/championship&amp;game=1">Replay the first match game</a> · <a href="../data/v3/championship.csv" download>Download all 320 games</a></p></section></div>
+<section class="paper detailsCard"><h2>What V3 can prove</h2><p>When a number is withdrawn, the older boards can never recur. V3 uses this to build proofs from smaller games upward. It can also reuse a strategy between withdrawals by checking the exact boards its winning side still needs to visit.</p><p>For example, with A holding 9, B holding 8 and B to move, a fresh board is a forced win for B. At tap 13 of an archived game the same board and same turn give A a forced win. <a href="index.html?suite=league/v2-v1&amp;game=20&amp;tap=13">Inspect both players’ forced line</a>.</p><p>V3 has verified strategies for 13,934 fresh positions, including 2,787 first-player wins and 120 second-player wins with all six numbers live. The standard all-ones opening remains unresolved.</p><p><a href="index.html?opening=1312">Try a newly proved first-player win</a> · <a href="index.html?opening=14944">Study a newly proved second-player win</a></p></section>
+<section class="paper detailsCard"><h2>How the engines were compared</h2><p>V3 and the frozen V2 received 500,000 main search nodes per move. V3 searched up to 32 taps with forced-reply extensions. V2 used its released depth of 18. Graph construction and proof checks consume additional time outside the main-node count. On 384 identical archived positions, native V3 averaged 46.0 ms of CPU per decision and V2 averaged 17.4 ms.</p><p>Both hands were drawn uniformly from the 165 sorted triples. The match used new random seeds after development ended. The referee independently replayed every tap, checked all repetition bans and verified each terminal result.</p><p>V3 won both games on 60 openings, split 98 pairs, and lost both games on two. Both engines converted all 18 certified opening wins when they held the winning seat. V3 won 200 of 284 games starting from unresolved openings.</p><p id="rating"></p><p><a href="https://github.com/ChrisCai03/tapgame/tree/main/v3">Engine source and reproduction commands</a> · <a href="league.html">Earlier four-bot league</a></p></section>
+</main></body></html>

@@ -2,26 +2,26 @@ import {replay, inspect, terminal, step, initial, traceOK, edges, code} from './
 import {Search} from './search.mjs';
 import {estimate, simulate, rng, rolloutNames, simNames, simpleMove} from './policy.mjs';
 
-export const ENGINE_NAMES = {v2:'Tapgame v2', v1:'Tapgame v1', ...rolloutNames};
+export const ENGINE_NAMES = {v3:'Tapgame v3', v2:'Tapgame v2', v1:'Tapgame v1', ...rolloutNames};
 export const RULESET = 'tap10-3-positional-v1';
 const own = (obj, k) => typeof k === 'string' && Object.hasOwn(obj, k);
 const integer = (x, lo, hi, name) => {
   if (!Number.isInteger(x) || x<lo || x>hi) throw Error(name+' must be an integer between '+lo+' and '+hi+'.');
   return x;
 };
-export const defaultLimits = engine => engine === 'v1'?{nodes:4500, depth:8}:{nodes:500000, depth:18};
+export const defaultLimits = engine => engine === 'v1'?{nodes:4500, depth:8}:{nodes:500000, depth:engine === 'v3'?32:18};
 export function respond(request, tables, model, fixedEngine) {
   const id = request?.id ?? null;
   try {
     if (!request || request.v !== 1 || !(typeof id === 'string' || Number.isSafeInteger(id)))throw Error('TGEP version 1 and a request id are required.');
     const {cmd} = request, engine = fixedEngine ?? request.engine ?? 'v2';
     if (!own(ENGINE_NAMES, engine))throw Error('Unknown engine.');
-    const canSearch = engine === 'v1' || engine === 'v2';
+    const canSearch = engine === 'v3' || engine === 'v1' || engine === 'v2';
     const commands = ['hello', 'inspect', 'choose', 'evaluate', 'timeline', 'simulate', ...(canSearch?['analyze']:[])];
     if (!commands.includes(cmd))throw Error('Unsupported command: '+String(cmd));
     const ok = result => ({v:1, id, ok:true, result});
     if (cmd === 'hello')return ok({protocol:'TGEP', version:1, engine:ENGINE_NAMES[engine], rulesets:[RULESET], commands,
-        defaultLimits:canSearch?defaultLimits(engine):null, moveEncoding:'xy', stochastic:engine !== 'v1'});
+        defaultLimits:canSearch?defaultLimits(engine):null, moveEncoding:'xy', stochastic:engine !== 'v1' && engine !== 'v3'});
     const pos = request.position ?? {}, state = cmd === 'timeline'?null:replay(pos);
     if (cmd === 'inspect')return ok(inspect(state));
     if (cmd === 'timeline') {

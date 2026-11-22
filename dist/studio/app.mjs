@@ -1,4 +1,5 @@
 import {BOARD_COUNT, drawOpeningId, openingFromId, openingId, openingProof} from './openings.mjs';
+import {readV3} from './v3.mjs';
 import {OPEN, replay, inspect, tapText} from './rules.mjs';
 import {simNames} from './policy.mjs';
 import {createStudy, importStudy, position, branch, forkPly} from './study.mjs';
@@ -7,7 +8,7 @@ import {showDialog, loadGame, presets, esc, selectOpts} from './dialogs.mjs';
 
 const $ = id => document.getElementById(id);
 const channels = Object.fromEntries(['analysis', 'chart', 'eval', 'sim', 'play', 'pick', 'scan'].map(k => [k, new Channel()]));
-const defaults = {engine:'v2', preset:'balanced', policyA:'guided', policyB:'guided', games:128, seed:42, seatA:'human', seatB:'v2'};
+const defaults = {engine:'v3', preset:'balanced', policyA:'guided', policyB:'guided', games:128, seed:42, seatA:'human', seatB:'v3', playNodes:500000};
 const read = (k, d) => {
   try {
     return JSON.parse(localStorage.getItem('tapstudio.'+k)) ?? d;
@@ -422,7 +423,7 @@ function updateChart() {
 function simLabel() {
   return simNames[config.policyA]+' vs '+simNames[config.policyB]+' · '+fmt(config.games)+' games · seed '+config.seed;
 }
-let certificateData;
+let certificateData, v3OpeningData;
 async function showOpeningNote() {
   const box = $('openingNote'), rev = revision, id = openingId(study.start);
   box.replaceChildren();
@@ -441,7 +442,17 @@ async function showOpeningNote() {
     });
     const table = await certificateData;
     if (revision !== rev) return;
-    const proof = openingProof(study.start, table);
+    let proof = openingProof(study.start, table);
+    if (!proof) {
+      v3OpeningData ??= fetch('./assets/v3.bin').then(async response => {
+        if (!response.ok) throw Error();
+        return readV3(await response.arrayBuffer());
+      }).catch(error => { v3OpeningData = null; throw error; });
+      const book = await v3OpeningData;
+      if (revision !== rev) return;
+      const s = replay({start:study.start, trace:''}).s, sign = book.cert[s];
+      if (sign) proof = {winner: sign>0 ? study.start.turn : study.start.turn==='A'?'B':'A', move:sign>0?book.move[s]:null};
+    }
     if (!proof) { box.append(' · No opening certificate on file.'); return; }
     box.append(' · Player '+proof.winner+' can force a win'+(proof.short?' within six taps.':'.'));
     if (proof.move) box.append(' Winning first tap: '+tapText(String(proof.move))+'.');
@@ -492,6 +503,8 @@ function syncArena() {
   for (const s of ['A', 'B']) {
     $('seat'+s).innerHTML = selectOpts([['human', 'Human'], ...[...engines].map(([id, e]) => [id, e.name])], config['seat'+s]);
   }
+  $('v3PlayBudget').hidden = config.seatA !== 'v3' && config.seatB !== 'v3';
+  $('playNodes').value = config.playNodes===2000000?'2000000':'500000';
   $('autoPlay').textContent = run?'Pause play':'Start play';
   $('autoPlay').disabled = !!info?.result;
   $('oneMove').disabled = !!info?.result || busyPlay || config['seat'+info?.turn] === 'human';
@@ -509,7 +522,8 @@ async function engineTurn() {
   busyPlay = true;
   syncArena();
   try {
-    const r = await channels.play.request(engine, 'choose', {position:pos, seed:(config.seed+Math.imul(study.ply, 2654435761))>>>0});
+    const limits = engine === 'v3'?{nodes:config.playNodes===2000000?2000000:500000, depth:32}:undefined;
+    const r = await channels.play.request(engine, 'choose', {position:pos, limits, seed:(config.seed+Math.imul(study.ply, 2654435761))>>>0});
     if (ticket !== playRevision || rev !== revision)return;
     if (!info.legal.includes(r.move))throw Error(nameOf(engine)+' returned an illegal move; play is paused.');
     busyPlay = false;
@@ -560,7 +574,7 @@ async function runSim() {
   const counts = {A:0, draw:0, B:0};
   try {
     while (done<k) {
-      const n = Math.min([config.policyA, config.policyB].some(p => p === 'v1' || p === 'v2')?1:64, k-done);
+      const n = Math.min([config.policyA, config.policyB].some(p => p === 'v1' || p === 'v2' || p === 'v3')?1:64, k-done);
       $('simProgress').textContent = done+' / '+k;
       const r = await channels.sim.request('guided', 'simulate', {position:pos, games:n, seed:(seed+Math.imul(done, 2654435761))>>>0, policyA:config.policyA, policyB:config.policyB});
       if (token !== simToken || rev !== revision)return;
@@ -728,6 +742,12 @@ function wire() {
       if (rev === revision)$('actualPick').disabled = false;
     }
   };
+  $('playNodes').onchange = e => {
+    stopArena();
+    config.playNodes = Number(e.target.value);
+    save('config',config);
+    syncArena();
+  };
   $('oneMove').onclick = engineTurn;
   $('autoPlay').onclick = () => {
     if (run)stopArena(); else {
@@ -812,7 +832,7 @@ async function boot() {
   try {
     await discover();
   } catch {/* Static hosting works without a local bridge. */}
-  if (!engines.get(config.engine)?.search)config.engine = 'v2';
+  if (!engines.get(config.engine)?.search)config.engine = defaults.engine;
   for (const s of ['A', 'B'])if (config['seat'+s] !== 'human' && !engines.has(config['seat'+s]))config['seat'+s] = defaults['seat'+s];
   try {
     const stored = read('current', null), url = new URLSearchParams(location.search);
@@ -829,11 +849,20 @@ async function boot() {
       const n = Number(url.get('tap') ?? 0);
       study = await loadGame(url.get('suite') || 'v2-v1', Number(url.get('game')), Number.isInteger(n)?n:0);
     } else study = stored?importStudy(stored):await loadGame('v2-v1', 1, 12);
+    if (url.get('play') === 'v3') {
+      config.engine = 'v3';
+      config.seatA = 'human';
+      config.seatB = 'v3';
+      config.playNodes = 500000;
+      mode = 'play';
+      run = true;
+    }
   } catch (e) {
     study = createStudy('Opening');
     notice(e.message);
   }
   wire();
   refresh();
+  queuePlay();
 }
 boot();

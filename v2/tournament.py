@@ -7,7 +7,7 @@ for arg in ('engine','old','new','out'):p.add_argument(arg,type=Path)
 for arg in ('games','seat_seed','policy_seed','nodes','band','workers'):p.add_argument(arg,type=int)
 p.add_argument("--depth",type=int,default=13)
 p.add_argument("--opening-seed", type=int, help="pair each random three-vs-three start with a rematch swapping bots")
-p.add_argument('--players', nargs=2, choices=['v2','v1','heuristic','random'],
+p.add_argument('--players', nargs=2, choices=['v3','v2','v1','heuristic','random'],
                help='policies in CSV result order, for random-opening matches')
 a=p.parse_args()
 if a.players and a.opening_seed is None:
